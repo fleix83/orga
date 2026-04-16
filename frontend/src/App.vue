@@ -1,6 +1,52 @@
 <template>
-  <div>
-    <h1>Orga-Tool</h1>
-    <p>Setup complete.</p>
+  <div v-if="loading" />
+  <div v-else-if="isLoginPage">
+    <router-view />
+  </div>
+  <div v-else class="app-layout">
+    <Sidebar />
+    <main class="main-content">
+      <router-view />
+    </main>
   </div>
 </template>
+
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { api } from './api.js'
+import Sidebar from './components/Sidebar.vue'
+
+const router = useRouter()
+const route = useRoute()
+const loading = ref(true)
+const authenticated = ref(false)
+
+const isLoginPage = computed(() => route.path === '/login')
+
+onMounted(async () => {
+  try {
+    const res = await api.get('auth.php?action=check')
+    authenticated.value = res.authenticated
+  } catch {
+    authenticated.value = false
+  }
+
+  if (!authenticated.value && route.path !== '/login') {
+    router.push('/login')
+  }
+  loading.value = false
+})
+
+router.beforeEach((to) => {
+  if (!to.meta.noAuth && !authenticated.value && !loading.value) {
+    return '/login'
+  }
+})
+
+watch(() => route.path, (path) => {
+  if (path !== '/login') {
+    authenticated.value = true
+  }
+})
+</script>
