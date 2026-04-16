@@ -62,11 +62,8 @@ if ($method === 'PUT' && $id) {
 if ($method === 'POST') {
     $data = getJsonBody();
 
-    // Get the "Manueller Termin" event type id
-    $stmt = $pdo->prepare('SELECT id FROM event_types WHERE user_id = 1 AND name = ? LIMIT 1');
-    $stmt->execute(['Manueller Termin']);
-    $eventType = $stmt->fetch();
-    $eventTypeId = $eventType ? $eventType['id'] : 4; // fallback to Custom Termine
+    // Use "Termine Kunden Bewerbungen & Mehr" event type (id=1)
+    $eventTypeId = 1;
 
     $stmt = $pdo->prepare('
         INSERT INTO events (user_id, event_type_id, event_date, start_slot, end_slot, customer_id, title, notes, status)
@@ -83,6 +80,13 @@ if ($method === 'POST') {
         $data['status'] ?? 'confirmed',
     ]);
     jsonResponse(['id' => (int)$pdo->lastInsertId()], 201);
+}
+
+// DELETE: Delete appointment
+if ($method === 'DELETE' && $id) {
+    $stmt = $pdo->prepare('DELETE FROM events WHERE id = ?');
+    $stmt->execute([$id]);
+    jsonResponse(['success' => true]);
 }
 
 http_response_code(405);

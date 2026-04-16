@@ -2,7 +2,7 @@
   <div>
     <div class="page-header">
       <h1>Termine</h1>
-      <button class="btn-primary" @click="openModal">Neuer Termin</button>
+      <button class="btn btn-primary" @click="openModal">+ Neuer Termin</button>
     </div>
 
     <table>
@@ -16,6 +16,7 @@
           <th style="text-align:right">CHF</th>
           <th>Status</th>
           <th>Notizen</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -35,9 +36,17 @@
             </select>
           </td>
           <td><InlineEdit v-model="t.notes" @update:model-value="v => updateNotes(t, v)" /></td>
+          <td><button class="btn btn-sm btn-danger" @click="confirmDelete(t)">✕</button></td>
         </tr>
       </tbody>
     </table>
+
+    <ConfirmDialog
+      :visible="!!deleteTarget"
+      message="Termin wirklich löschen?"
+      @confirm="doDelete"
+      @cancel="deleteTarget = null"
+    />
 
     <!-- New appointment modal -->
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
@@ -85,8 +94,8 @@
             <textarea v-model="form.notes" rows="3" placeholder="Optionale Notizen …"></textarea>
           </div>
           <div class="form-actions">
-            <button type="button" class="btn-secondary" @click="closeModal">Abbrechen</button>
-            <button type="submit" class="btn-primary" :disabled="saving">{{ saving ? 'Speichern …' : 'Speichern' }}</button>
+            <button type="button" class="btn" @click="closeModal">Abbrechen</button>
+            <button type="submit" class="btn btn-primary" :disabled="saving">{{ saving ? 'Speichern …' : 'Speichern' }}</button>
           </div>
         </form>
       </div>
@@ -98,9 +107,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { api } from '../api.js'
 import InlineEdit from '../components/InlineEdit.vue'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
 
 const appointments = ref([])
 const customers = ref([])
+const deleteTarget = ref(null)
 const showModal = ref(false)
 const saving = ref(false)
 
@@ -159,6 +170,14 @@ async function updateStatus(appointment, status) {
 
 async function updateNotes(appointment, notes) {
   await api.put(`appointments.php?id=${appointment.id}`, { notes })
+}
+
+function confirmDelete(t) { deleteTarget.value = t }
+
+async function doDelete() {
+  await api.del(`appointments.php?id=${deleteTarget.value.id}`)
+  deleteTarget.value = null
+  appointments.value = await api.get('appointments.php')
 }
 </script>
 
