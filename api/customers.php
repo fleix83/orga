@@ -11,7 +11,7 @@ if ($method === 'GET') {
         $stmt = $pdo->prepare('
             SELECT c.*,
                 COALESCE(SUM(o.amount), 0) AS total,
-                COUNT(DISTINCT o.id) AS order_count
+                COALESCE(c.order_count_override, COUNT(DISTINCT o.id)) AS order_count
             FROM customers c
             LEFT JOIN orders o ON o.customer_id = c.id
             WHERE c.id = ?
@@ -29,7 +29,7 @@ if ($method === 'GET') {
     $query = '
         SELECT c.*,
             COALESCE(SUM(o.amount), 0) AS total,
-            COUNT(DISTINCT o.id) AS order_count
+            COALESCE(c.order_count_override, COUNT(DISTINCT o.id)) AS order_count
         FROM customers c
         LEFT JOIN orders o ON o.customer_id = c.id
     ';
@@ -51,11 +51,20 @@ if ($method === 'GET') {
 // POST: Create customer
 if ($method === 'POST') {
     $data = getJsonBody();
+
+    // Generate next sequential customer number (01, 02, 03, ...)
+    $number = $data['customer_number'] ?? null;
+    if (!$number) {
+        $stmt = $pdo->query("SELECT MAX(CAST(customer_number AS UNSIGNED)) AS max_num FROM customers WHERE customer_number REGEXP '^[0-9]+$'");
+        $row = $stmt->fetch();
+        $next = ((int)($row['max_num'] ?? 0)) + 1;
+        $number = str_pad((string)$next, 2, '0', STR_PAD_LEFT);
+    }
+
     $stmt = $pdo->prepare('
         INSERT INTO customers (customer_number, salutation, first_name, last_name, email, phone, street, zip, city, nationality, notes)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ');
-    $number = 'CUST' . date('Ymd') . rand(1000, 9999);
     $stmt->execute([
         $number,
         $data['salutation'] ?? null,
@@ -77,7 +86,7 @@ if ($method === 'PUT' && $id) {
     $data = getJsonBody();
     $fields = [];
     $params = [];
-    $allowed = ['salutation', 'first_name', 'last_name', 'email', 'phone', 'street', 'zip', 'city', 'nationality', 'notes'];
+    $allowed = ['customer_number', 'salutation', 'first_name', 'last_name', 'email', 'phone', 'street', 'zip', 'city', 'nationality', 'notes', 'order_count_override'];
 
     foreach ($allowed as $field) {
         if (array_key_exists($field, $data)) {

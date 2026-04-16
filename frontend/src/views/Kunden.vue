@@ -27,7 +27,7 @@
       <tbody>
         <template v-for="c in customers" :key="c.id">
           <tr>
-            <td>{{ c.customer_number }}</td>
+            <td><InlineEdit v-model="c.customer_number" @update:model-value="v => updateField(c, 'customer_number', v)" /></td>
             <td><InlineEdit v-model="c.salutation" @update:model-value="v => updateField(c, 'salutation', v)" /></td>
             <td><InlineEdit v-model="c.last_name" @update:model-value="v => updateField(c, 'last_name', v)" /></td>
             <td><InlineEdit v-model="c.first_name" @update:model-value="v => updateField(c, 'first_name', v)" /></td>
@@ -35,7 +35,7 @@
             <td><InlineEdit v-model="c.phone" @update:model-value="v => updateField(c, 'phone', v)" /></td>
             <td><InlineEdit v-model="c.email" @update:model-value="v => updateField(c, 'email', v)" /></td>
             <td style="text-align:right">{{ Number(c.total || 0).toFixed(2) }}</td>
-            <td style="text-align:right">{{ c.order_count || 0 }}</td>
+            <td style="text-align:right"><InlineEdit v-model="c.order_count" type="int" @update:model-value="v => updateField(c, 'order_count_override', v)" /></td>
             <td style="white-space:nowrap">
               <button class="btn btn-sm" @click="toggleExpand(c.id)">{{ expanded === c.id ? '▲' : '▼' }}</button>
               <button class="btn btn-sm" @click="openEdit(c)" title="Bearbeiten">✎</button>
