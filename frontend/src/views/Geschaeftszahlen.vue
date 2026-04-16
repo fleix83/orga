@@ -1,1 +1,141 @@
-<template><div><div class="page-header"><h1>Geschäftszahlen</h1></div><p>Wird implementiert...</p></div></template>
+<template>
+  <div>
+    <div class="page-header">
+      <h1>Geschäftszahlen</h1>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-sm" @click="prevPeriod">←</button>
+        <select v-model="selectedYear" @change="load" style="width:auto">
+          <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+        </select>
+        <select v-model="selectedMonth" @change="load" style="width:auto">
+          <option :value="null">Ganzes Jahr</option>
+          <option v-for="m in 12" :key="m" :value="m">{{ monthNames[m - 1] }}</option>
+        </select>
+        <button class="btn btn-sm" @click="nextPeriod">→</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <a :href="exportUrl('csv')" class="btn btn-sm">CSV Export</a>
+      <a :href="exportUrl('pdf')" class="btn btn-sm">PDF Export</a>
+    </div>
+
+    <template v-if="selectedMonth">
+      <h3 style="margin-bottom:12px">Einnahmen</h3>
+      <table>
+        <thead>
+          <tr><th>Datum</th><th>Kunde</th><th>Dienstleistung</th><th>Zuordnung</th><th style="text-align:right">CHF</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="o in report.orders" :key="o.id">
+            <td>{{ o.order_date }}</td>
+            <td>{{ o.customer_first_name }} {{ o.customer_last_name }}</td>
+            <td>{{ o.service_names }}</td>
+            <td>{{ o.category_name }}</td>
+            <td style="text-align:right">{{ Number(o.amount).toFixed(2) }}</td>
+          </tr>
+          <tr class="totals-row"><td colspan="4">Total Einnahmen</td><td style="text-align:right">{{ Number(report.total_income || 0).toFixed(2) }}</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="margin:20px 0 12px">Aufwände</h3>
+      <table>
+        <thead>
+          <tr><th>Datum</th><th>Bezeichnung</th><th>Zuordnung</th><th style="text-align:right">CHF</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="e in report.expenses" :key="e.id">
+            <td>{{ e.expense_date }}</td>
+            <td>{{ e.description }}</td>
+            <td>{{ e.category_name }}</td>
+            <td style="text-align:right">{{ Number(e.amount).toFixed(2) }}</td>
+          </tr>
+          <tr class="totals-row"><td colspan="3">Total Aufwände</td><td style="text-align:right">{{ Number(report.total_expenses || 0).toFixed(2) }}</td></tr>
+        </tbody>
+      </table>
+
+      <table style="margin-top:20px">
+        <tbody>
+          <tr class="totals-row">
+            <td>Bilanz</td>
+            <td style="text-align:right;font-size:16px">CHF {{ Number(report.balance || 0).toFixed(2) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </template>
+
+    <template v-else>
+      <table>
+        <thead>
+          <tr><th>Monat</th><th style="text-align:right">Einnahmen</th><th style="text-align:right">Aufwände</th><th style="text-align:right">Bilanz</th><th style="text-align:right">Aufträge</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="m in report.months" :key="m.month" style="cursor:pointer" @click="selectedMonth = m.month; load()">
+            <td>{{ monthNames[m.month - 1] }}</td>
+            <td style="text-align:right">{{ Number(m.income).toFixed(2) }}</td>
+            <td style="text-align:right">{{ Number(m.expenses).toFixed(2) }}</td>
+            <td style="text-align:right">{{ Number(m.balance).toFixed(2) }}</td>
+            <td style="text-align:right">{{ m.order_count }}</td>
+          </tr>
+          <tr class="totals-row">
+            <td>Total</td>
+            <td style="text-align:right">{{ Number(report.total_income || 0).toFixed(2) }}</td>
+            <td style="text-align:right">{{ Number(report.total_expenses || 0).toFixed(2) }}</td>
+            <td style="text-align:right">{{ Number(report.balance || 0).toFixed(2) }}</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </template>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { api } from '../api.js'
+
+const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
+const currentYear = new Date().getFullYear()
+const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i)
+
+const selectedYear = ref(currentYear)
+const selectedMonth = ref(null)
+const report = ref({})
+
+onMounted(load)
+
+async function load() {
+  const params = selectedMonth.value
+    ? `?month=${selectedMonth.value}&year=${selectedYear.value}`
+    : `?year=${selectedYear.value}`
+  report.value = await api.get(`reports.php${params}`)
+}
+
+function exportUrl(type) {
+  const base = import.meta.env.DEV ? '/api' : '/orga/api'
+  const params = selectedMonth.value
+    ? `type=${type}&month=${selectedMonth.value}&year=${selectedYear.value}`
+    : `type=${type}&year=${selectedYear.value}`
+  return `${base}/export.php?${params}`
+}
+
+function prevPeriod() {
+  if (selectedMonth.value) {
+    selectedMonth.value--
+    if (selectedMonth.value < 1) { selectedMonth.value = 12; selectedYear.value-- }
+  } else {
+    selectedYear.value--
+  }
+  load()
+}
+
+function nextPeriod() {
+  if (selectedMonth.value) {
+    selectedMonth.value++
+    if (selectedMonth.value > 12) { selectedMonth.value = 1; selectedYear.value++ }
+  } else {
+    selectedYear.value++
+  }
+  load()
+}
+</script>
