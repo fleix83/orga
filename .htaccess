@@ -1,3 +1,4 @@
+DirectoryIndex dist/index.html
 RewriteEngine On
 RewriteBase /orga/
 
@@ -6,10 +7,6 @@ RewriteRule ^api/ - [L]
 
 # Don't rewrite existing files (dist assets)
 RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule ^ - [L]
-
-# Don't rewrite existing directories
-RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
 # Rewrite everything else to dist/index.html (Vue SPA)
