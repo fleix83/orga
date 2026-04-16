@@ -11,9 +11,8 @@
           <th>Datum</th>
           <th>Kunde</th>
           <th>Dienstleistungen</th>
+          <th>Anmerkungen</th>
           <th style="text-align:right">Betrag CHF</th>
-          <th>Zuordnung</th>
-          <th>Ort</th>
           <th></th>
         </tr>
       </thead>
@@ -22,9 +21,8 @@
           <td>{{ o.order_date }}</td>
           <td>{{ o.customer_first_name }} {{ o.customer_last_name }}</td>
           <td>{{ o.service_names || '–' }}</td>
+          <td>{{ o.notes && o.notes.length > 50 ? o.notes.slice(0, 50) + '...' : (o.notes || '–') }}</td>
           <td style="text-align:right">{{ Number(o.amount).toFixed(2) }}</td>
-          <td>{{ o.category_name }}</td>
-          <td>{{ o.location_type === 'remote' ? 'Remote' : 'Vor Ort' }}</td>
           <td>
             <button class="btn btn-sm" @click="edit(o)">✎</button>
             <button class="btn btn-sm btn-danger" @click="confirmDelete(o)">✕</button>

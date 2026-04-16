@@ -3,55 +3,55 @@
     <div class="modal">
       <h2>{{ order.id ? 'Auftrag bearbeiten' : 'Neuer Auftrag' }}</h2>
 
-      <div class="form-group">
-        <label>Datum</label>
-        <input v-model="form.order_date" type="date" required>
+      <div class="modal-grid">
+        <div class="form-group">
+          <label>Datum</label>
+          <input v-model="form.order_date" type="date" required>
+        </div>
+        <div class="form-group">
+          <label>Vor Ort / Remote</label>
+          <select v-model="form.location_type">
+            <option value="vor_ort">Vor Ort</option>
+            <option value="remote">Remote</option>
+          </select>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label>Vor Ort / Remote</label>
-        <select v-model="form.location_type">
-          <option value="vor_ort">Vor Ort</option>
-          <option value="remote">Remote</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Kunde</label>
-        <select v-model="form.customer_id">
-          <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.first_name }} {{ c.last_name }}</option>
-        </select>
+      <div class="modal-grid">
+        <div class="form-group">
+          <label>Kunde</label>
+          <select v-model="form.customer_id">
+            <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.first_name }} {{ c.last_name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Zuordnung</label>
+          <select v-model="form.category_id">
+            <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
+        </div>
       </div>
 
       <div class="form-group">
         <label>Dienstleistungen</label>
-        <div v-for="s in availableServices" :key="s.id" style="margin-bottom:4px">
-          <label style="display:flex;align-items:center;gap:8px;font-weight:normal">
+        <div class="checkbox-list">
+          <label v-for="s in availableServices.filter(s => s.name && s.name.trim())" :key="s.id">
             <input type="checkbox" :value="s.id" v-model="selectedServiceIds">
             {{ s.name }} (CHF {{ Number(s.price).toFixed(2) }})
           </label>
-        </div>
-        <div style="margin-top:8px">
-          <label style="font-weight:normal">
+          <label>
             <input type="checkbox" v-model="hasCustomService"> Custom-Dienstleistung
           </label>
-          <div v-if="hasCustomService" style="display:flex;gap:8px;margin-top:4px">
-            <input v-model="customServiceName" placeholder="Bezeichnung" style="flex:2">
-            <input v-model.number="customServicePrice" type="number" step="0.01" placeholder="Preis" style="flex:1">
-          </div>
+        </div>
+        <div v-if="hasCustomService" style="display:flex;gap:8px;margin-top:8px;padding-left:24px">
+          <input v-model="customServiceName" placeholder="Bezeichnung" style="flex:2">
+          <input v-model.number="customServicePrice" type="number" step="0.01" placeholder="Preis" style="flex:1">
         </div>
       </div>
 
       <div class="form-group">
         <label>Betrag CHF ({{ calculatedAmount.toFixed(2) }})</label>
-        <input v-model.number="form.amount" type="number" step="0.01">
-      </div>
-
-      <div class="form-group">
-        <label>Zuordnung</label>
-        <select v-model="form.category_id">
-          <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
-        </select>
+        <input v-model.number="form.amount" type="number" step="0.01" style="max-width:150px">
       </div>
 
       <div class="form-group">
@@ -154,3 +154,24 @@ async function save() {
   emit('saved')
 }
 </script>
+
+<style scoped>
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.checkbox-list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+  padding: 4px 0;
+}
+
+.checkbox-list input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+</style>
