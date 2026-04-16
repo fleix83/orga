@@ -13,9 +13,9 @@
           <th>Typ</th>
           <th>Kunde</th>
           <th>Dienstleistungen</th>
+          <th>Notizen</th>
           <th style="text-align:right">CHF</th>
           <th>Status</th>
-          <th>Notizen</th>
           <th></th>
         </tr>
       </thead>
@@ -26,6 +26,7 @@
           <td><span class="badge" :style="{ background: t.color + '33', color: t.color }">{{ t.event_type }}</span></td>
           <td>{{ t.customer_first_name ? `${t.customer_first_name} ${t.customer_last_name}` : '–' }}</td>
           <td>{{ t.service_names || '–' }}</td>
+          <td><InlineEdit v-model="t.notes" @update:model-value="v => updateNotes(t, v)" /></td>
           <td style="text-align:right">{{ t.total_price ? Number(t.total_price).toFixed(2) : '–' }}</td>
           <td>
             <select :value="t.status" @change="updateStatus(t, $event.target.value)" style="padding:2px 6px;border:1px solid #e5e7eb;border-radius:4px;font-size:13px">
@@ -35,7 +36,6 @@
               <option value="cancelled">Abgesagt</option>
             </select>
           </td>
-          <td><InlineEdit v-model="t.notes" @update:model-value="v => updateNotes(t, v)" /></td>
           <td><button class="btn btn-sm btn-danger" @click="confirmDelete(t)">✕</button></td>
         </tr>
       </tbody>
