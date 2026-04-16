@@ -2,6 +2,7 @@
   <div>
     <div class="page-header">
       <h1>Termine</h1>
+      <button class="btn-primary" @click="openModal">Neuer Termin</button>
     </div>
 
     <table>
@@ -37,19 +38,119 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- New appointment modal -->
+    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+      <div class="modal">
+        <h2>Neuer Termin</h2>
+        <form @submit.prevent="saveAppointment">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Datum</label>
+              <input type="date" v-model="form.event_date" required />
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select v-model="form.status">
+                <option value="confirmed">Bestätigt</option>
+                <option value="pending">Ausstehend</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Startzeit</label>
+              <select v-model="form.start_slot">
+                <option v-for="h in startHours" :key="h" :value="h">{{ String(h).padStart(2, '0') }}:00</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Endzeit</label>
+              <select v-model="form.end_slot">
+                <option v-for="h in endHours" :key="h" :value="h">{{ String(h).padStart(2, '0') }}:00</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Titel (optional)</label>
+            <input type="text" v-model="form.title" placeholder="z.B. Beratung, Sitzung …" />
+          </div>
+          <div class="form-group">
+            <label>Kunde (optional)</label>
+            <select v-model="form.customer_id">
+              <option value="">Kein Kunde</option>
+              <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.first_name }} {{ c.last_name }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Notizen</label>
+            <textarea v-model="form.notes" rows="3" placeholder="Optionale Notizen …"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" @click="closeModal">Abbrechen</button>
+            <button type="submit" class="btn-primary" :disabled="saving">{{ saving ? 'Speichern …' : 'Speichern' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { api } from '../api.js'
 import InlineEdit from '../components/InlineEdit.vue'
 
 const appointments = ref([])
+const customers = ref([])
+const showModal = ref(false)
+const saving = ref(false)
+
+const defaultForm = () => ({
+  event_date: new Date().toISOString().slice(0, 10),
+  start_slot: 9,
+  end_slot: 10,
+  title: '',
+  customer_id: '',
+  notes: '',
+  status: 'confirmed',
+})
+
+const form = ref(defaultForm())
+
+const startHours = Array.from({ length: 14 }, (_, i) => i + 8)  // 8–21
+const endHours = computed(() => Array.from({ length: 14 }, (_, i) => i + 9).filter(h => h > form.value.start_slot))  // 9–22, must be after start
 
 onMounted(async () => {
   appointments.value = await api.get('appointments.php')
+  customers.value = await api.get('customers.php')
 })
+
+function openModal() {
+  form.value = defaultForm()
+  showModal.value = true
+}
+
+function closeModal() {
+  showModal.value = false
+}
+
+async function saveAppointment() {
+  saving.value = true
+  try {
+    await api.post('appointments.php', {
+      event_date: form.value.event_date,
+      start_slot: Number(form.value.start_slot),
+      end_slot: Number(form.value.end_slot),
+      customer_id: form.value.customer_id || null,
+      title: form.value.title || null,
+      notes: form.value.notes || null,
+      status: form.value.status,
+    })
+    appointments.value = await api.get('appointments.php')
+    closeModal()
+  } finally {
+    saving.value = false
+  }
+}
 
 async function updateStatus(appointment, status) {
   appointment.status = status
@@ -60,3 +161,11 @@ async function updateNotes(appointment, notes) {
   await api.put(`appointments.php?id=${appointment.id}`, { notes })
 }
 </script>
+
+<style scoped>
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+</style>

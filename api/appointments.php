@@ -58,5 +58,32 @@ if ($method === 'PUT' && $id) {
     jsonResponse(['success' => true]);
 }
 
+// POST: Create manual appointment
+if ($method === 'POST') {
+    $data = getJsonBody();
+
+    // Get the "Manueller Termin" event type id
+    $stmt = $pdo->prepare('SELECT id FROM event_types WHERE user_id = 1 AND name = ? LIMIT 1');
+    $stmt->execute(['Manueller Termin']);
+    $eventType = $stmt->fetch();
+    $eventTypeId = $eventType ? $eventType['id'] : 4; // fallback to Custom Termine
+
+    $stmt = $pdo->prepare('
+        INSERT INTO events (user_id, event_type_id, event_date, start_slot, end_slot, customer_id, title, notes, status)
+        VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)
+    ');
+    $stmt->execute([
+        $eventTypeId,
+        $data['event_date'],
+        $data['start_slot'] ?? 9,
+        $data['end_slot'] ?? 10,
+        $data['customer_id'] ?: null,
+        $data['title'] ?? null,
+        $data['notes'] ?? null,
+        $data['status'] ?? 'confirmed',
+    ]);
+    jsonResponse(['id' => (int)$pdo->lastInsertId()], 201);
+}
+
 http_response_code(405);
 echo json_encode(['error' => 'Method not allowed']);
