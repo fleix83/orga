@@ -22,6 +22,7 @@
 
     <template v-if="selectedMonth">
       <h3 style="margin-bottom:12px">Einnahmen</h3>
+      <div class="table-wrap">
       <table>
         <thead>
           <tr><th>Datum</th><th>Kunde</th><th>Dienstleistung</th><th>Zuordnung</th><th style="text-align:right">CHF</th></tr>
@@ -37,8 +38,10 @@
           <tr class="totals-row"><td colspan="4">Total Einnahmen</td><td style="text-align:right">{{ Number(report.total_income || 0).toFixed(2) }}</td></tr>
         </tbody>
       </table>
+      </div>
 
       <h3 style="margin:20px 0 12px">Aufwände</h3>
+      <div class="table-wrap">
       <table>
         <thead>
           <tr><th>Datum</th><th>Bezeichnung</th><th>Zuordnung</th><th style="text-align:right">CHF</th></tr>
@@ -53,7 +56,9 @@
           <tr class="totals-row"><td colspan="3">Total Aufwände</td><td style="text-align:right">{{ Number(report.total_expenses || 0).toFixed(2) }}</td></tr>
         </tbody>
       </table>
+      </div>
 
+      <div class="table-wrap">
       <table style="margin-top:20px">
         <tbody>
           <tr class="totals-row">
@@ -62,9 +67,11 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </template>
 
     <template v-else>
+      <div class="table-wrap">
       <table>
         <thead>
           <tr><th>Monat</th><th style="text-align:right">Einnahmen</th><th style="text-align:right">Aufwände</th><th style="text-align:right">Bilanz</th><th style="text-align:right">Aufträge</th></tr>
@@ -86,6 +93,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </template>
   </div>
 </template>

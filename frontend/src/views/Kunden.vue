@@ -8,6 +8,7 @@
       </div>
     </div>
 
+    <div class="table-wrap">
     <table>
       <thead>
         <tr>
@@ -54,6 +55,7 @@
         </template>
       </tbody>
     </table>
+    </div>
 
     <ConfirmDialog
       :visible="!!deleteTarget"

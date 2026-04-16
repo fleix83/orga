@@ -5,6 +5,7 @@
       <button class="btn btn-primary" @click="showModal = true; editOrder = {}">+ Neuer Auftrag</button>
     </div>
 
+    <div class="table-wrap">
     <table>
       <thead>
         <tr>
@@ -30,6 +31,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
 
     <OrderModal
       v-if="showModal"

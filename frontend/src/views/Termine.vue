@@ -5,6 +5,7 @@
       <button class="btn btn-primary" @click="openModal">+ Neuer Termin</button>
     </div>
 
+    <div class="table-wrap">
     <table>
       <thead>
         <tr>
@@ -40,6 +41,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
 
     <ConfirmDialog
       :visible="!!deleteTarget"

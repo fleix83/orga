@@ -5,6 +5,7 @@
       <button class="btn btn-primary" @click="addService">+ Neue Dienstleistung</button>
     </div>
 
+    <div class="table-wrap">
     <table>
       <thead>
         <tr>
@@ -29,6 +30,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
 
     <ConfirmDialog
       :visible="!!deleteTarget"

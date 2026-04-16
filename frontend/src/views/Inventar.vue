@@ -5,6 +5,7 @@
       <button class="btn btn-primary" @click="addItem">+ Neues Inventar</button>
     </div>
 
+    <div class="table-wrap">
     <table>
       <thead>
         <tr>
@@ -45,6 +46,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
 
     <ConfirmDialog
       :visible="!!deleteTarget"
