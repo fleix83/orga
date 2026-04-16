@@ -10,6 +10,7 @@ body {
   background: #fff;
   font-size: 14px;
   line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
 }
 
 .app-layout {
@@ -21,17 +22,32 @@ body {
   flex: 1;
   padding: 24px 32px;
   margin-left: 220px;
+  min-width: 0;
 }
 
+/* Table wrapper for horizontal scroll on mobile */
 table {
   width: 100%;
   border-collapse: collapse;
+}
+
+.main-content > table,
+.main-content table {
+  display: table;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 th, td {
   padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
 }
 
 th {
@@ -41,6 +57,7 @@ th {
   letter-spacing: 0.5px;
   color: #6b7280;
   border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
 }
 
 tr:hover {
@@ -59,6 +76,7 @@ tr:hover {
   font-size: 14px;
   cursor: pointer;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .btn:hover { background: #f9fafb; }
@@ -88,6 +106,8 @@ input:focus, select:focus, textarea:focus {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .page-header h1 { font-size: 20px; font-weight: 600; }
@@ -136,3 +156,93 @@ input:focus, select:focus, textarea:focus {
 .badge-confirmed { background: #d1fae5; color: #065f46; }
 .badge-completed { background: #dbeafe; color: #1e40af; }
 .badge-cancelled { background: #fee2e2; color: #991b1b; }
+
+/* Mobile burger menu trigger */
+.menu-toggle {
+  display: none;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 200;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #374151;
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 150;
+}
+
+/* ===================== MOBILE ===================== */
+@media (max-width: 768px) {
+  body { font-size: 13px; }
+
+  .app-layout { display: block; }
+
+  .main-content {
+    margin-left: 0;
+    padding: 56px 12px 16px;
+  }
+
+  .menu-toggle { display: inline-flex; }
+
+  /* Sidebar slides in on mobile */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    z-index: 180;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-backdrop.open { display: block; }
+
+  .page-header { margin-bottom: 16px; }
+  .page-header h1 { font-size: 17px; }
+
+  th, td { padding: 6px 8px; font-size: 12px; }
+  th { font-size: 11px; }
+
+  .btn { padding: 6px 12px; font-size: 13px; }
+  .btn-sm { padding: 3px 7px; font-size: 12px; }
+
+  input, select, textarea { padding: 8px 10px; font-size: 14px; }
+
+  /* Fullscreen modal on mobile */
+  .modal-overlay { align-items: stretch; justify-content: stretch; }
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: 100vh;
+    min-height: 100vh;
+    border-radius: 0;
+    padding: 16px;
+    padding-top: 20px;
+  }
+
+  .modal h2 { font-size: 16px; }
+  .form-group { margin-bottom: 12px; }
+  .form-actions {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding: 12px 0 0;
+    margin-top: 16px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .search-input { max-width: 100%; width: 100%; }
+
+  .expand-row td { padding: 10px 8px; }
+
+  .tab { padding: 6px 12px; font-size: 13px; }
+}

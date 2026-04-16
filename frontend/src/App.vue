@@ -4,7 +4,9 @@
     <router-view />
   </div>
   <div v-else class="app-layout">
-    <Sidebar />
+    <button class="menu-toggle" @click="sidebarOpen = true" aria-label="Menü">☰</button>
+    <div class="sidebar-backdrop" :class="{ open: sidebarOpen }" @click="sidebarOpen = false"></div>
+    <Sidebar :open="sidebarOpen" @close="sidebarOpen = false" />
     <main class="main-content">
       <router-view />
     </main>
@@ -21,6 +23,7 @@ const router = useRouter()
 const route = useRoute()
 const loading = ref(true)
 const authenticated = ref(false)
+const sidebarOpen = ref(false)
 
 const isLoginPage = computed(() => route.path === '/login')
 
@@ -48,5 +51,6 @@ watch(() => route.path, (path) => {
   if (path !== '/login') {
     authenticated.value = true
   }
+  sidebarOpen.value = false
 })
 </script>

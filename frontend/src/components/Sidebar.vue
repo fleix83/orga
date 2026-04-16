@@ -1,7 +1,7 @@
 <template>
-  <nav class="sidebar">
+  <nav class="sidebar" :class="{ open }">
     <div class="sidebar-title">Orga</div>
-    <router-link v-for="item in items" :key="item.path" :to="item.path" class="sidebar-link">
+    <router-link v-for="item in items" :key="item.path" :to="item.path" class="sidebar-link" @click="$emit('close')">
       {{ item.label }}
     </router-link>
     <button class="sidebar-logout" @click="logout">Abmelden</button>
@@ -11,6 +11,9 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { api } from '../api.js'
+
+defineProps({ open: { type: Boolean, default: false } })
+defineEmits(['close'])
 
 const router = useRouter()
 
@@ -49,4 +52,14 @@ async function logout() {
 .sidebar-link.router-link-active { color: #2563eb; background: #eff6ff; font-weight: 500; }
 .sidebar-logout { margin-top: auto; padding: 10px 20px; border: none; background: none; color: #6b7280; cursor: pointer; text-align: left; font-size: 14px; }
 .sidebar-logout:hover { color: #dc2626; }
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+    padding-top: 16px;
+  }
+  .sidebar-title { font-size: 16px; padding: 0 16px 14px; margin-bottom: 4px; }
+  .sidebar-link { padding: 12px 16px; font-size: 14px; }
+  .sidebar-logout { padding: 12px 16px; font-size: 14px; }
+}
 </style>
