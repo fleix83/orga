@@ -4,7 +4,13 @@
     <router-view />
   </div>
   <div v-else class="app-layout">
-    <button class="menu-toggle" @click="sidebarOpen = true" aria-label="Menü">☰</button>
+    <button class="menu-toggle" @click="sidebarOpen = true" aria-label="Menü">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="4" y1="7" x2="20" y2="7"/>
+        <line x1="4" y1="12" x2="20" y2="12"/>
+        <line x1="4" y1="17" x2="20" y2="17"/>
+      </svg>
+    </button>
     <div class="sidebar-backdrop" :class="{ open: sidebarOpen }" @click="sidebarOpen = false"></div>
     <Sidebar :open="sidebarOpen" @close="sidebarOpen = false" />
     <main class="main-content">

@@ -1,9 +1,11 @@
 <template>
   <nav class="sidebar" :class="{ open }">
     <div class="sidebar-title">Orga</div>
-    <router-link v-for="item in items" :key="item.path" :to="item.path" class="sidebar-link" @click="$emit('close')">
-      {{ item.label }}
-    </router-link>
+    <div class="sidebar-nav">
+      <router-link v-for="item in items" :key="item.path" :to="item.path" class="sidebar-link" @click="$emit('close')">
+        {{ item.label }}
+      </router-link>
+    </div>
     <button class="sidebar-logout" @click="logout">Abmelden</button>
   </nav>
 </template>
@@ -40,26 +42,82 @@ async function logout() {
   top: 0;
   bottom: 0;
   width: 220px;
-  background: #f9fafb;
-  border-right: 1px solid #e5e7eb;
-  padding: 20px 0;
+  background: #fafafa;
+  border-right: 1px solid #f3f4f6;
+  padding: 28px 0 16px;
   display: flex;
   flex-direction: column;
 }
-.sidebar-title { font-size: 18px; font-weight: 700; padding: 0 20px 20px; border-bottom: 1px solid #e5e7eb; margin-bottom: 8px; }
-.sidebar-link { display: block; padding: 10px 20px; text-decoration: none; color: #374151; font-size: 14px; }
-.sidebar-link:hover { background: #f3f4f6; }
-.sidebar-link.router-link-active { color: #2563eb; background: #eff6ff; font-weight: 500; }
-.sidebar-logout { margin-top: auto; padding: 10px 20px; border: none; background: none; color: #6b7280; cursor: pointer; text-align: left; font-size: 14px; }
+
+.sidebar-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  padding: 0 24px 24px;
+  color: #111827;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 12px;
+}
+
+.sidebar-link {
+  display: block;
+  padding: 9px 14px;
+  text-decoration: none;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 7px;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.sidebar-link:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.sidebar-link.router-link-active {
+  color: #111827;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.sidebar-logout {
+  margin-top: auto;
+  padding: 10px 24px;
+  border: none;
+  background: none;
+  color: #9ca3af;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .sidebar-logout:hover { color: #dc2626; }
 
 @media (max-width: 768px) {
   .sidebar {
-    width: 200px;
-    padding-top: 16px;
+    width: 240px;
+    padding: 68px 0 24px;
+    background: #fff;
   }
-  .sidebar-title { font-size: 16px; padding: 0 16px 14px; margin-bottom: 4px; }
-  .sidebar-link { padding: 12px 16px; font-size: 14px; }
-  .sidebar-logout { padding: 12px 16px; font-size: 14px; }
+  .sidebar-title {
+    display: none;
+  }
+  .sidebar-nav { padding: 0 16px; }
+  .sidebar-link {
+    padding: 12px 16px;
+    font-size: 15px;
+    border-radius: 8px;
+  }
+  .sidebar-logout {
+    padding: 14px 24px;
+    font-size: 14px;
+  }
 }
 </style>
