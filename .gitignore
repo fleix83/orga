@@ -5,3 +5,4 @@ frontend/node_modules/
 vendor/
 composer.lock
 composer.phar
+api/config.php
