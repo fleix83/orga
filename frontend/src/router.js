@@ -10,7 +10,7 @@ import Termine from './views/Termine.vue'
 
 const routes = [
   { path: '/login', component: Login, meta: { noAuth: true } },
-  { path: '/', redirect: '/kunden' },
+  { path: '/', redirect: '/auftraege' },
   { path: '/kunden', component: Kunden },
   { path: '/auftraege', component: Auftraege },
   { path: '/dienstleistungen', component: Dienstleistungen },

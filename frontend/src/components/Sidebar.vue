@@ -15,8 +15,8 @@ import { api } from '../api.js'
 const router = useRouter()
 
 const items = [
-  { path: '/kunden', label: 'Kunden' },
   { path: '/auftraege', label: 'Aufträge' },
+  { path: '/kunden', label: 'Kunden' },
   { path: '/dienstleistungen', label: 'Dienstleistungen' },
   { path: '/inventar', label: 'Inventar' },
   { path: '/aufwand', label: 'Aufwand' },

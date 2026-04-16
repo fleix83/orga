@@ -4,7 +4,7 @@
       <h1>Kunden</h1>
       <div style="display:flex;gap:8px">
         <input v-model="search" class="search-input" placeholder="Suchen..." @input="loadCustomers">
-        <button class="btn btn-primary" @click="addCustomer">+ Neuer Kunde</button>
+        <button class="btn btn-primary" @click="openNew">+ Neuer Kunde</button>
       </div>
     </div>
 
@@ -35,8 +35,9 @@
             <td><InlineEdit v-model="c.email" @update:model-value="v => updateField(c, 'email', v)" /></td>
             <td style="text-align:right">{{ Number(c.total || 0).toFixed(2) }}</td>
             <td style="text-align:right">{{ c.order_count || 0 }}</td>
-            <td>
+            <td style="white-space:nowrap">
               <button class="btn btn-sm" @click="toggleExpand(c.id)">{{ expanded === c.id ? '▲' : '▼' }}</button>
+              <button class="btn btn-sm" @click="openEdit(c)" title="Bearbeiten">✎</button>
               <button class="btn btn-sm btn-danger" @click="confirmDelete(c)">✕</button>
             </td>
           </tr>
@@ -60,6 +61,75 @@
       @confirm="doDelete"
       @cancel="deleteTarget = null"
     />
+
+    <!-- Customer Modal -->
+    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+      <div class="modal" style="max-width:640px">
+        <h2>{{ modalCustomer.id ? 'Kunde bearbeiten' : 'Neuer Kunde' }}</h2>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Anrede</label>
+            <select v-model="form.salutation">
+              <option value="">–</option>
+              <option value="Herr">Herr</option>
+              <option value="Frau">Frau</option>
+              <option value="Divers">Divers</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Vorname</label>
+            <input v-model="form.first_name" type="text" placeholder="Vorname">
+          </div>
+
+          <div class="form-group">
+            <label>Name</label>
+            <input v-model="form.last_name" type="text" placeholder="Nachname">
+          </div>
+
+          <div class="form-group">
+            <label>Ort</label>
+            <input v-model="form.city" type="text" placeholder="Ort">
+          </div>
+
+          <div class="form-group">
+            <label>PLZ</label>
+            <input v-model="form.zip" type="text" placeholder="PLZ">
+          </div>
+
+          <div class="form-group">
+            <label>Strasse</label>
+            <input v-model="form.street" type="text" placeholder="Strasse">
+          </div>
+
+          <div class="form-group">
+            <label>Telefon</label>
+            <input v-model="form.phone" type="text" placeholder="Telefon">
+          </div>
+
+          <div class="form-group">
+            <label>Email</label>
+            <input v-model="form.email" type="email" placeholder="Email">
+          </div>
+
+          <div class="form-group">
+            <label>Nationalität</label>
+            <input v-model="form.nationality" type="text" placeholder="Nationalität">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:4px">
+          <label>Anmerkung</label>
+          <textarea v-model="form.notes" rows="3" placeholder="Anmerkungen..."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn" @click="closeModal">Abbrechen</button>
+          <button class="btn btn-primary" @click="saveModal">Speichern</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -74,6 +144,26 @@ const search = ref('')
 const expanded = ref(null)
 const deleteTarget = ref(null)
 
+// Modal state
+const showModal = ref(false)
+const modalCustomer = ref({})
+const form = ref(emptyForm())
+
+function emptyForm() {
+  return {
+    salutation: '',
+    first_name: '',
+    last_name: '',
+    street: '',
+    zip: '',
+    city: '',
+    phone: '',
+    email: '',
+    nationality: '',
+    notes: '',
+  }
+}
+
 onMounted(loadCustomers)
 
 async function loadCustomers() {
@@ -81,10 +171,42 @@ async function loadCustomers() {
   customers.value = await api.get(`customers.php${query}`)
 }
 
-async function addCustomer() {
-  const result = await api.post('customers.php', { first_name: '', last_name: 'Neuer Kunde' })
+function openNew() {
+  modalCustomer.value = {}
+  form.value = emptyForm()
+  showModal.value = true
+}
+
+function openEdit(customer) {
+  modalCustomer.value = customer
+  form.value = {
+    salutation: customer.salutation || '',
+    first_name: customer.first_name || '',
+    last_name: customer.last_name || '',
+    street: customer.street || '',
+    zip: customer.zip || '',
+    city: customer.city || '',
+    phone: customer.phone || '',
+    email: customer.email || '',
+    nationality: customer.nationality || '',
+    notes: customer.notes || '',
+  }
+  showModal.value = true
+}
+
+function closeModal() {
+  showModal.value = false
+  modalCustomer.value = {}
+}
+
+async function saveModal() {
+  if (modalCustomer.value.id) {
+    await api.put(`customers.php?id=${modalCustomer.value.id}`, form.value)
+  } else {
+    await api.post('customers.php', form.value)
+  }
+  closeModal()
   await loadCustomers()
-  expanded.value = result.id
 }
 
 async function updateField(customer, field, value) {
@@ -105,3 +227,11 @@ async function doDelete() {
   await loadCustomers()
 }
 </script>
+
+<style scoped>
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+</style>
