@@ -9,24 +9,25 @@
     <table>
       <thead>
         <tr>
-          <th>Datum</th>
-          <th>Kunde</th>
-          <th>Dienstleistungen</th>
-          <th>Anmerkungen</th>
-          <th style="text-align:right">Betrag CHF</th>
+          <th :class="sortClass('order_date')" @click="toggleSort('order_date')">Datum</th>
+          <th :class="sortClass('order_number')" @click="toggleSort('order_number')">Nr.</th>
+          <th :class="sortClass('customer_last_name')" @click="toggleSort('customer_last_name')">Kunde</th>
+          <th :class="sortClass('service_names')" @click="toggleSort('service_names')">Dienstleistungen</th>
+          <th :class="sortClass('notes')" @click="toggleSort('notes')">Anmerkungen</th>
+          <th style="text-align:right" :class="sortClass('amount')" @click="toggleSort('amount')">Betrag CHF</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="o in orders" :key="o.id">
+        <tr v-for="o in sorted" :key="o.id" class="clickable-row" @click="edit(o)">
           <td>{{ o.order_date }}</td>
+          <td>{{ o.order_number || '–' }}</td>
           <td>{{ o.customer_first_name }} {{ o.customer_last_name }}</td>
           <td>{{ o.service_names || '–' }}</td>
           <td>{{ o.notes && o.notes.length > 50 ? o.notes.slice(0, 50) + '...' : (o.notes || '–') }}</td>
           <td style="text-align:right">{{ Number(o.amount).toFixed(2) }}</td>
           <td>
-            <button class="btn btn-sm" @click="edit(o)">✎</button>
-            <button class="btn btn-sm btn-danger" @click="confirmDelete(o)">✕</button>
+            <button class="btn btn-sm btn-danger" @click.stop="confirmDelete(o)">✕</button>
           </td>
         </tr>
       </tbody>
@@ -54,11 +55,14 @@ import { ref, onMounted } from 'vue'
 import { api } from '../api.js'
 import OrderModal from '../components/OrderModal.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
+import { useSort } from '../composables/useSort.js'
 
 const orders = ref([])
 const showModal = ref(false)
 const editOrder = ref({})
 const deleteTarget = ref(null)
+
+const { sorted, toggleSort, sortClass } = useSort(orders, 'order_date', 'desc')
 
 onMounted(load)
 
@@ -79,3 +83,7 @@ async function doDelete() {
   await load()
 }
 </script>
+
+<style scoped>
+.clickable-row { cursor: pointer; }
+</style>

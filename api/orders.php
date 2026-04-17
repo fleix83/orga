@@ -55,11 +55,21 @@ if ($method === 'POST') {
     $pdo->beginTransaction();
 
     try {
+        // Generate next sequential order_number (01, 02, ...)
+        $orderNumber = $data['order_number'] ?? null;
+        if (!$orderNumber) {
+            $stmt = $pdo->query("SELECT MAX(CAST(order_number AS UNSIGNED)) AS max_num FROM orders WHERE order_number REGEXP '^[0-9]+$'");
+            $row = $stmt->fetch();
+            $next = ((int)($row['max_num'] ?? 0)) + 1;
+            $orderNumber = str_pad((string)$next, 2, '0', STR_PAD_LEFT);
+        }
+
         $stmt = $pdo->prepare('
-            INSERT INTO orders (order_date, customer_id, category_id, location_type, amount, notes)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO orders (order_number, order_date, customer_id, category_id, location_type, amount, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         ');
         $stmt->execute([
+            $orderNumber,
             $data['order_date'],
             $data['customer_id'],
             $data['category_id'],
@@ -96,7 +106,7 @@ if ($method === 'PUT' && $id) {
     try {
         $fields = [];
         $params = [];
-        $allowed = ['order_date', 'customer_id', 'category_id', 'location_type', 'amount', 'notes'];
+        $allowed = ['order_number', 'order_date', 'customer_id', 'category_id', 'location_type', 'amount', 'notes'];
 
         foreach ($allowed as $field) {
             if (array_key_exists($field, $data)) {

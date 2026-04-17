@@ -25,10 +25,16 @@
       <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Datum</th><th>Kunde</th><th>Dienstleistung</th><th>Zuordnung</th><th style="text-align:right">CHF</th></tr>
+          <tr>
+            <th :class="sortClassOrders('order_date')" @click="toggleSortOrders('order_date')">Datum</th>
+            <th :class="sortClassOrders('customer_first_name')" @click="toggleSortOrders('customer_first_name')">Kunde</th>
+            <th :class="sortClassOrders('service_names')" @click="toggleSortOrders('service_names')">Dienstleistung</th>
+            <th :class="sortClassOrders('category_name')" @click="toggleSortOrders('category_name')">Zuordnung</th>
+            <th style="text-align:right" :class="sortClassOrders('amount')" @click="toggleSortOrders('amount')">CHF</th>
+          </tr>
         </thead>
         <tbody>
-          <tr v-for="o in report.orders" :key="o.id">
+          <tr v-for="o in sortedOrders" :key="o.id">
             <td>{{ o.order_date }}</td>
             <td>{{ o.customer_first_name }} {{ o.customer_last_name }}</td>
             <td>{{ o.service_names }}</td>
@@ -44,10 +50,15 @@
       <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Datum</th><th>Bezeichnung</th><th>Zuordnung</th><th style="text-align:right">CHF</th></tr>
+          <tr>
+            <th :class="sortClassExpenses('expense_date')" @click="toggleSortExpenses('expense_date')">Datum</th>
+            <th :class="sortClassExpenses('description')" @click="toggleSortExpenses('description')">Bezeichnung</th>
+            <th :class="sortClassExpenses('category_name')" @click="toggleSortExpenses('category_name')">Zuordnung</th>
+            <th style="text-align:right" :class="sortClassExpenses('amount')" @click="toggleSortExpenses('amount')">CHF</th>
+          </tr>
         </thead>
         <tbody>
-          <tr v-for="e in report.expenses" :key="e.id">
+          <tr v-for="e in sortedExpenses" :key="e.id">
             <td>{{ e.expense_date }}</td>
             <td>{{ e.description }}</td>
             <td>{{ e.category_name }}</td>
@@ -99,8 +110,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { api } from '../api.js'
+import { useSort } from '../composables/useSort.js'
 
 const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
 const currentYear = new Date().getFullYear()
@@ -109,6 +121,12 @@ const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i)
 const selectedYear = ref(currentYear)
 const selectedMonth = ref(null)
 const report = ref({})
+
+const reportOrders = computed(() => report.value.orders || [])
+const reportExpenses = computed(() => report.value.expenses || [])
+
+const { sorted: sortedOrders, toggleSort: toggleSortOrders, sortClass: sortClassOrders } = useSort(reportOrders, 'order_date', 'asc')
+const { sorted: sortedExpenses, toggleSort: toggleSortExpenses, sortClass: sortClassExpenses } = useSort(reportExpenses, 'expense_date', 'asc')
 
 onMounted(load)
 

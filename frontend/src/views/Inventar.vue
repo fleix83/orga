@@ -9,15 +9,15 @@
     <table>
       <thead>
         <tr>
-          <th>Bezeichnung</th>
-          <th style="text-align:right">Wert CHF</th>
-          <th>Kaufdatum</th>
-          <th>Zuordnung</th>
+          <th :class="sortClass('name')" @click="toggleSort('name')">Bezeichnung</th>
+          <th style="text-align:right" :class="sortClass('value')" @click="toggleSort('value')">Wert CHF</th>
+          <th :class="sortClass('purchase_date')" @click="toggleSort('purchase_date')">Kaufdatum</th>
+          <th :class="sortClass('owner')" @click="toggleSort('owner')">Zuordnung</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in items" :key="item.id">
+        <tr v-for="item in sorted" :key="item.id">
           <td><InlineEdit v-model="item.name" @update:model-value="v => update(item, 'name', v)" /></td>
           <td style="text-align:right"><InlineEdit v-model="item.value" type="number" @update:model-value="v => update(item, 'value', v)" /></td>
           <td><InlineEdit v-model="item.purchase_date" @update:model-value="v => update(item, 'purchase_date', v)" /></td>
@@ -62,8 +62,11 @@ import { ref, computed, onMounted } from 'vue'
 import { api } from '../api.js'
 import InlineEdit from '../components/InlineEdit.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
+import { useSort } from '../composables/useSort.js'
 
 const items = ref([])
+
+const { sorted, toggleSort, sortClass } = useSort(items, 'name', 'asc')
 const deleteTarget = ref(null)
 
 const totalAll = computed(() => items.value.reduce((sum, i) => sum + Number(i.value || 0), 0))

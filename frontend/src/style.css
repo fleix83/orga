@@ -66,6 +66,24 @@ th {
   white-space: nowrap;
 }
 
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+th.sortable:hover {
+  color: #6b7280;
+}
+
+th.sort-active {
+  color: #111827;
+  text-decoration: underline;
+  text-decoration-color: #111827;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+}
+
 tr:hover {
   background: #fafafa;
 }

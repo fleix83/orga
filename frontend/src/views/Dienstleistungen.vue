@@ -9,15 +9,15 @@
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th style="text-align:right">Preis CHF</th>
-          <th>Beschreibung</th>
-          <th>Aktiv</th>
+          <th :class="sortClass('name')" @click="toggleSort('name')">Name</th>
+          <th style="text-align:right" :class="sortClass('price')" @click="toggleSort('price')">Preis CHF</th>
+          <th :class="sortClass('description')" @click="toggleSort('description')">Beschreibung</th>
+          <th :class="sortClass('active')" @click="toggleSort('active')">Aktiv</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="s in services" :key="s.id">
+        <tr v-for="s in sorted" :key="s.id">
           <td><InlineEdit v-model="s.name" @update:model-value="v => update(s, 'name', v)" /></td>
           <td style="text-align:right"><InlineEdit v-model="s.price" type="number" @update:model-value="v => update(s, 'price', v)" /></td>
           <td><InlineEdit v-model="s.description" @update:model-value="v => update(s, 'description', v)" /></td>
@@ -46,8 +46,11 @@ import { ref, onMounted } from 'vue'
 import { api } from '../api.js'
 import InlineEdit from '../components/InlineEdit.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
+import { useSort } from '../composables/useSort.js'
 
 const services = ref([])
+
+const { sorted, toggleSort, sortClass } = useSort(services, 'sort_order', 'asc')
 const deleteTarget = ref(null)
 
 onMounted(load)

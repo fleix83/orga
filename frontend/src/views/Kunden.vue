@@ -12,20 +12,20 @@
     <table>
       <thead>
         <tr>
-          <th>Nr.</th>
-          <th>Anrede</th>
-          <th>Name</th>
-          <th>Vorname</th>
-          <th>Ort</th>
-          <th>Telefon</th>
-          <th>Email</th>
-          <th style="text-align:right">Total CHF</th>
-          <th style="text-align:right">Termine</th>
+          <th :class="sortClass('customer_number')" @click="toggleSort('customer_number')">Nr.</th>
+          <th :class="sortClass('salutation')" @click="toggleSort('salutation')">Anrede</th>
+          <th :class="sortClass('last_name')" @click="toggleSort('last_name')">Name</th>
+          <th :class="sortClass('first_name')" @click="toggleSort('first_name')">Vorname</th>
+          <th :class="sortClass('city')" @click="toggleSort('city')">Ort</th>
+          <th :class="sortClass('phone')" @click="toggleSort('phone')">Telefon</th>
+          <th :class="sortClass('email')" @click="toggleSort('email')">Email</th>
+          <th style="text-align:right" :class="sortClass('total')" @click="toggleSort('total')">Total CHF</th>
+          <th style="text-align:right" :class="sortClass('order_count')" @click="toggleSort('order_count')">Termine</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
-        <template v-for="c in customers" :key="c.id">
+        <template v-for="c in sorted" :key="c.id">
           <tr>
             <td><InlineEdit v-model="c.customer_number" @update:model-value="v => updateField(c, 'customer_number', v)" /></td>
             <td><InlineEdit v-model="c.salutation" @update:model-value="v => updateField(c, 'salutation', v)" /></td>
@@ -140,8 +140,11 @@ import { ref, onMounted } from 'vue'
 import { api } from '../api.js'
 import InlineEdit from '../components/InlineEdit.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
+import { useSort } from '../composables/useSort.js'
 
 const customers = ref([])
+
+const { sorted, toggleSort, sortClass } = useSort(customers, 'last_name', 'asc')
 const search = ref('')
 const expanded = ref(null)
 const deleteTarget = ref(null)

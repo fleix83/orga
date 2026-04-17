@@ -9,19 +9,19 @@
     <table>
       <thead>
         <tr>
-          <th>Datum</th>
-          <th>Uhrzeit</th>
-          <th>Typ</th>
-          <th>Kunde</th>
-          <th>Dienstleistungen</th>
-          <th>Notizen</th>
-          <th style="text-align:right">CHF</th>
-          <th>Status</th>
+          <th :class="sortClass('event_date')" @click="toggleSort('event_date')">Datum</th>
+          <th :class="sortClass('time_display')" @click="toggleSort('time_display')">Uhrzeit</th>
+          <th :class="sortClass('event_type')" @click="toggleSort('event_type')">Typ</th>
+          <th :class="sortClass('customer_last_name')" @click="toggleSort('customer_last_name')">Kunde</th>
+          <th :class="sortClass('service_names')" @click="toggleSort('service_names')">Dienstleistungen</th>
+          <th :class="sortClass('notes')" @click="toggleSort('notes')">Notizen</th>
+          <th style="text-align:right" :class="sortClass('total_price')" @click="toggleSort('total_price')">CHF</th>
+          <th :class="sortClass('status')" @click="toggleSort('status')">Status</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="t in appointments" :key="t.id">
+        <tr v-for="t in sorted" :key="t.id">
           <td>{{ t.event_date }}</td>
           <td>{{ t.time_display }}</td>
           <td><span class="badge" :style="{ background: t.color + '33', color: t.color }">{{ t.event_type }}</span></td>
@@ -110,8 +110,11 @@ import { ref, computed, onMounted } from 'vue'
 import { api } from '../api.js'
 import InlineEdit from '../components/InlineEdit.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
+import { useSort } from '../composables/useSort.js'
 
 const appointments = ref([])
+
+const { sorted, toggleSort, sortClass } = useSort(appointments, 'event_date', 'desc')
 const customers = ref([])
 const deleteTarget = ref(null)
 const showModal = ref(false)
