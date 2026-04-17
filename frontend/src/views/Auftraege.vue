@@ -20,7 +20,7 @@
       </thead>
       <tbody>
         <tr v-for="o in sorted" :key="o.id" class="clickable-row" @click="edit(o)">
-          <td>{{ o.order_date }}</td>
+          <td>{{ formatDate(o.order_date) }}</td>
           <td>{{ o.order_number || '–' }}</td>
           <td>{{ o.customer_first_name }} {{ o.customer_last_name }}</td>
           <td>{{ o.service_names || '–' }}</td>
@@ -56,6 +56,7 @@ import { api } from '../api.js'
 import OrderModal from '../components/OrderModal.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import { useSort } from '../composables/useSort.js'
+import { formatDate } from '../utils/formatDate.js'
 
 const orders = ref([])
 const showModal = ref(false)

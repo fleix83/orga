@@ -20,7 +20,7 @@
         <tr v-for="item in sorted" :key="item.id">
           <td><InlineEdit v-model="item.name" @update:model-value="v => update(item, 'name', v)" /></td>
           <td style="text-align:right"><InlineEdit v-model="item.value" type="number" @update:model-value="v => update(item, 'value', v)" /></td>
-          <td><InlineEdit v-model="item.purchase_date" @update:model-value="v => update(item, 'purchase_date', v)" /></td>
+          <td><InlineEdit v-model="item.purchase_date" type="date" @update:model-value="v => update(item, 'purchase_date', v)" /></td>
           <td>
             <select :value="item.owner" @change="update(item, 'owner', $event.target.value)" style="padding:2px 6px;border:1px solid #e5e7eb;border-radius:4px;font-size:14px">
               <option value="felix">Felix</option>

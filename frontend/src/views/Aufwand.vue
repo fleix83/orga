@@ -18,7 +18,7 @@
       </thead>
       <tbody>
         <tr v-for="e in sorted" :key="e.id">
-          <td><InlineEdit v-model="e.expense_date" @update:model-value="v => update(e, 'expense_date', v)" /></td>
+          <td><InlineEdit v-model="e.expense_date" type="date" @update:model-value="v => update(e, 'expense_date', v)" /></td>
           <td><InlineEdit v-model="e.description" @update:model-value="v => update(e, 'description', v)" /></td>
           <td style="text-align:right"><InlineEdit v-model="e.amount" type="number" @update:model-value="v => update(e, 'amount', v)" /></td>
           <td>

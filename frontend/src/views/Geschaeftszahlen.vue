@@ -35,7 +35,7 @@
         </thead>
         <tbody>
           <tr v-for="o in sortedOrders" :key="o.id">
-            <td>{{ o.order_date }}</td>
+            <td>{{ formatDate(o.order_date) }}</td>
             <td>{{ o.customer_first_name }} {{ o.customer_last_name }}</td>
             <td>{{ o.service_names }}</td>
             <td>{{ o.category_name }}</td>
@@ -59,7 +59,7 @@
         </thead>
         <tbody>
           <tr v-for="e in sortedExpenses" :key="e.id">
-            <td>{{ e.expense_date }}</td>
+            <td>{{ formatDate(e.expense_date) }}</td>
             <td>{{ e.description }}</td>
             <td>{{ e.category_name }}</td>
             <td style="text-align:right">{{ Number(e.amount).toFixed(2) }}</td>
@@ -113,6 +113,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { api } from '../api.js'
 import { useSort } from '../composables/useSort.js'
+import { formatDate } from '../utils/formatDate.js'
 
 const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
 const currentYear = new Date().getFullYear()

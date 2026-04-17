@@ -22,7 +22,7 @@
       </thead>
       <tbody>
         <tr v-for="t in sorted" :key="t.id">
-          <td>{{ t.event_date }}</td>
+          <td>{{ formatDate(t.event_date) }}</td>
           <td>{{ t.time_display }}</td>
           <td><span class="badge" :style="{ background: t.color + '33', color: t.color }">{{ t.event_type }}</span></td>
           <td>{{ t.customer_first_name ? `${t.customer_first_name} ${t.customer_last_name}` : '–' }}</td>
@@ -111,6 +111,7 @@ import { api } from '../api.js'
 import InlineEdit from '../components/InlineEdit.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import { useSort } from '../composables/useSort.js'
+import { formatDate } from '../utils/formatDate.js'
 
 const appointments = ref([])
 
