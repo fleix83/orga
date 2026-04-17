@@ -57,9 +57,15 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <label>Betrag CHF ({{ calculatedAmount.toFixed(2) }})</label>
-        <input v-model.number="form.amount" type="number" step="0.01" style="max-width:150px">
+      <div class="modal-grid">
+        <div class="form-group">
+          <label>Betrag CHF ({{ calculatedAmount.toFixed(2) }})</label>
+          <input v-model.number="form.amount" type="number" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Zeit (Min.)</label>
+          <input v-model.number="form.duration_minutes" type="number" step="5" min="0" placeholder="0">
+        </div>
       </div>
 
       <div class="form-group">
@@ -102,6 +108,7 @@ const form = ref({
   category_id: props.order.category_id || 1,
   location_type: props.order.location_type || 'vor_ort',
   amount: props.order.amount || 0,
+  duration_minutes: props.order.duration_minutes ?? null,
   notes: props.order.notes || '',
 })
 

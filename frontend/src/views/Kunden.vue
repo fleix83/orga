@@ -125,6 +125,12 @@
           <textarea v-model="form.notes" rows="3" placeholder="Anmerkungen..."></textarea>
         </div>
 
+        <div v-if="modalCustomer.id" class="customer-stats">
+          <div><span class="stat-label">Total CHF</span><span class="stat-value">{{ Number(modalCustomer.total || 0).toFixed(2) }}</span></div>
+          <div><span class="stat-label">Termine</span><span class="stat-value">{{ modalCustomer.order_count || 0 }}</span></div>
+          <div><span class="stat-label">Gesamtzeit</span><span class="stat-value">{{ formatDuration(modalCustomer.total_duration) }}</span></div>
+        </div>
+
         <div class="form-actions">
           <button class="btn" @click="closeModal">Abbrechen</button>
           <button class="btn btn-primary" @click="saveModal">Speichern</button>
@@ -140,6 +146,16 @@ import { api } from '../api.js'
 import InlineEdit from '../components/InlineEdit.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import { useSort } from '../composables/useSort.js'
+
+function formatDuration(mins) {
+  const n = Number(mins || 0)
+  if (n <= 0) return '0 Min'
+  const h = Math.floor(n / 60)
+  const m = n % 60
+  if (h === 0) return `${m} Min`
+  if (m === 0) return `${h} h`
+  return `${h} h ${m} Min`
+}
 
 const customers = ref([])
 
@@ -237,5 +253,35 @@ async function doDelete() {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 16px;
+}
+
+.customer-stats {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  background: #fafafa;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.customer-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
 }
 </style>

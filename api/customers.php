@@ -11,6 +11,7 @@ if ($method === 'GET') {
         $stmt = $pdo->prepare('
             SELECT c.*,
                 COALESCE(SUM(o.amount), 0) AS total,
+                COALESCE(SUM(o.duration_minutes), 0) AS total_duration,
                 COALESCE(c.order_count_override, COUNT(DISTINCT o.id)) AS order_count
             FROM customers c
             LEFT JOIN orders o ON o.customer_id = c.id
