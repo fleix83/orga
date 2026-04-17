@@ -88,6 +88,8 @@ tr:hover {
   background: #fafafa;
 }
 
+.clickable-row { cursor: pointer; }
+
 /* Buttons */
 .btn {
   display: inline-flex;
