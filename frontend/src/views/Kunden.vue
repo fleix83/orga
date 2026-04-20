@@ -25,33 +25,20 @@
         </tr>
       </thead>
       <tbody>
-        <template v-for="c in sorted" :key="c.id">
-          <tr class="clickable-row" @click="openEdit(c)">
-            <td @click.stop><InlineEdit v-model="c.customer_number" @update:model-value="v => updateField(c, 'customer_number', v)" /></td>
-            <td @click.stop><InlineEdit v-model="c.salutation" @update:model-value="v => updateField(c, 'salutation', v)" /></td>
-            <td @click.stop><InlineEdit v-model="c.last_name" @update:model-value="v => updateField(c, 'last_name', v)" /></td>
-            <td @click.stop><InlineEdit v-model="c.first_name" @update:model-value="v => updateField(c, 'first_name', v)" /></td>
-            <td @click.stop><InlineEdit v-model="c.city" @update:model-value="v => updateField(c, 'city', v)" /></td>
-            <td @click.stop><InlineEdit v-model="c.phone" @update:model-value="v => updateField(c, 'phone', v)" /></td>
-            <td @click.stop><InlineEdit v-model="c.email" @update:model-value="v => updateField(c, 'email', v)" /></td>
-            <td style="text-align:right">{{ Number(c.total || 0).toFixed(2) }}</td>
-            <td style="text-align:right" @click.stop><InlineEdit v-model="c.order_count" type="int" @update:model-value="v => updateField(c, 'order_count_override', v)" /></td>
-            <td style="white-space:nowrap" @click.stop>
-              <button class="btn btn-sm" @click="toggleExpand(c.id)">{{ expanded === c.id ? '▲' : '▼' }}</button>
-              <button class="btn btn-sm btn-danger" @click="confirmDelete(c)">✕</button>
-            </td>
-          </tr>
-          <tr v-if="expanded === c.id" class="expand-row">
-            <td colspan="10">
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;max-width:600px">
-                <div><label style="font-size:12px;color:#6b7280">Strasse</label><InlineEdit v-model="c.street" @update:model-value="v => updateField(c, 'street', v)" /></div>
-                <div><label style="font-size:12px;color:#6b7280">PLZ</label><InlineEdit v-model="c.zip" @update:model-value="v => updateField(c, 'zip', v)" /></div>
-                <div><label style="font-size:12px;color:#6b7280">Nationalität</label><InlineEdit v-model="c.nationality" @update:model-value="v => updateField(c, 'nationality', v)" /></div>
-              </div>
-              <div style="margin-top:8px"><label style="font-size:12px;color:#6b7280">Anmerkung</label><InlineEdit v-model="c.notes" @update:model-value="v => updateField(c, 'notes', v)" /></div>
-            </td>
-          </tr>
-        </template>
+        <tr v-for="c in sorted" :key="c.id" class="clickable-row" @click="openEdit(c)">
+          <td>{{ c.customer_number || '–' }}</td>
+          <td>{{ c.salutation || '–' }}</td>
+          <td>{{ c.last_name || '–' }}</td>
+          <td>{{ c.first_name || '–' }}</td>
+          <td>{{ c.city || '–' }}</td>
+          <td>{{ c.phone || '–' }}</td>
+          <td>{{ c.email || '–' }}</td>
+          <td style="text-align:right">{{ Number(c.total || 0).toFixed(2) }}</td>
+          <td style="text-align:right">{{ c.order_count || 0 }}</td>
+          <td @click.stop>
+            <button class="btn btn-sm btn-danger" @click="confirmDelete(c)">✕</button>
+          </td>
+        </tr>
       </tbody>
     </table>
     </div>
@@ -143,7 +130,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { api } from '../api.js'
-import InlineEdit from '../components/InlineEdit.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import { useSort } from '../composables/useSort.js'
 
@@ -161,7 +147,6 @@ const customers = ref([])
 
 const { sorted, toggleSort, sortClass } = useSort(customers, 'last_name', 'asc')
 const search = ref('')
-const expanded = ref(null)
 const deleteTarget = ref(null)
 
 // Modal state
@@ -227,14 +212,6 @@ async function saveModal() {
   }
   closeModal()
   await loadCustomers()
-}
-
-async function updateField(customer, field, value) {
-  await api.put(`customers.php?id=${customer.id}`, { [field]: value })
-}
-
-function toggleExpand(id) {
-  expanded.value = expanded.value === id ? null : id
 }
 
 function confirmDelete(customer) {
