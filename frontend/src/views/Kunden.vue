@@ -57,6 +57,11 @@
 
         <div class="form-grid">
           <div class="form-group">
+            <label>Kundennummer</label>
+            <input v-model="form.customer_number" type="text" :placeholder="modalCustomer.id ? '' : (nextCustomerNumber || 'Auto')">
+          </div>
+
+          <div class="form-group">
             <label>Anrede</label>
             <select v-model="form.salutation">
               <option value="">–</option>
@@ -156,6 +161,7 @@ const form = ref(emptyForm())
 
 function emptyForm() {
   return {
+    customer_number: '',
     salutation: '',
     first_name: '',
     last_name: '',
@@ -169,6 +175,8 @@ function emptyForm() {
   }
 }
 
+const nextCustomerNumber = ref('')
+
 onMounted(loadCustomers)
 
 async function loadCustomers() {
@@ -176,15 +184,22 @@ async function loadCustomers() {
   customers.value = await api.get(`customers.php${query}`)
 }
 
-function openNew() {
+async function openNew() {
   modalCustomer.value = {}
   form.value = emptyForm()
   showModal.value = true
+  try {
+    const res = await api.get('customers.php?next_number=1')
+    nextCustomerNumber.value = res.next_number || ''
+  } catch {
+    nextCustomerNumber.value = ''
+  }
 }
 
 function openEdit(customer) {
   modalCustomer.value = customer
   form.value = {
+    customer_number: customer.customer_number || '',
     salutation: customer.salutation || '',
     first_name: customer.first_name || '',
     last_name: customer.last_name || '',
