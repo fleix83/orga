@@ -85,11 +85,53 @@
             <input type="text" v-model="form.title" placeholder="z.B. Beratung, Sitzung …" />
           </div>
           <div class="form-group">
-            <label>Kunde (optional)</label>
-            <select v-model="form.customer_id">
+            <label>
+              <span>Kunde (optional)</span>
+              <button type="button" class="link-button" @click="toggleNewCustomer">
+                {{ showNewCustomer ? '× Abbrechen' : '+ Neuer Kunde' }}
+              </button>
+            </label>
+            <select v-if="!showNewCustomer" v-model="form.customer_id">
               <option value="">Kein Kunde</option>
               <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.first_name }} {{ c.last_name }}</option>
             </select>
+            <div v-else class="new-customer-block">
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label>Anrede</label>
+                  <select v-model="newCustomer.salutation">
+                    <option value="">–</option>
+                    <option value="Herr">Herr</option>
+                    <option value="Frau">Frau</option>
+                    <option value="Divers">Divers</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Vorname</label>
+                  <input type="text" v-model="newCustomer.first_name" placeholder="Vorname" />
+                </div>
+                <div class="form-group">
+                  <label>Name</label>
+                  <input type="text" v-model="newCustomer.last_name" placeholder="Nachname" />
+                </div>
+                <div class="form-group">
+                  <label>Telefon</label>
+                  <input type="text" v-model="newCustomer.phone" placeholder="Telefon" />
+                </div>
+                <div class="form-group" style="grid-column:1 / -1">
+                  <label>Email</label>
+                  <input type="email" v-model="newCustomer.email" placeholder="Email" />
+                </div>
+              </div>
+              <button
+                type="button"
+                class="btn btn-sm"
+                :disabled="creatingCustomer || (!newCustomer.first_name && !newCustomer.last_name)"
+                @click="createCustomer"
+              >
+                {{ creatingCustomer ? 'Anlegen …' : 'Kunde anlegen' }}
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label>Notizen</label>
@@ -112,6 +154,9 @@ import InlineEdit from '../components/InlineEdit.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import { useSort } from '../composables/useSort.js'
 import { formatDate } from '../utils/formatDate.js'
+import { useAppointmentNotifications } from '../composables/useAppointmentNotifications.js'
+
+const { markSeen } = useAppointmentNotifications()
 
 const appointments = ref([])
 
@@ -139,15 +184,44 @@ const endHours = computed(() => Array.from({ length: 14 }, (_, i) => i + 9).filt
 onMounted(async () => {
   appointments.value = await api.get('appointments.php')
   customers.value = await api.get('customers.php')
+  markSeen()
 })
+
+const showNewCustomer = ref(false)
+const creatingCustomer = ref(false)
+const emptyNewCustomer = () => ({ salutation: '', first_name: '', last_name: '', phone: '', email: '' })
+const newCustomer = ref(emptyNewCustomer())
+
+function toggleNewCustomer() {
+  showNewCustomer.value = !showNewCustomer.value
+  if (showNewCustomer.value) {
+    newCustomer.value = emptyNewCustomer()
+    form.value.customer_id = ''
+  }
+}
+
+async function createCustomer() {
+  creatingCustomer.value = true
+  try {
+    const res = await api.post('customers.php', newCustomer.value)
+    customers.value = await api.get('customers.php')
+    form.value.customer_id = res.id
+    showNewCustomer.value = false
+  } finally {
+    creatingCustomer.value = false
+  }
+}
 
 function openModal() {
   form.value = defaultForm()
+  showNewCustomer.value = false
+  newCustomer.value = emptyNewCustomer()
   showModal.value = true
 }
 
 function closeModal() {
   showModal.value = false
+  showNewCustomer.value = false
 }
 
 async function saveAppointment() {
@@ -192,5 +266,33 @@ async function doDelete() {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 16px;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+.new-customer-block {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fafafa;
 }
 </style>

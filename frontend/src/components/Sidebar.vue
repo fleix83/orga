@@ -2,8 +2,15 @@
   <nav class="sidebar" :class="{ open }">
     <div class="sidebar-title">Orga</div>
     <div class="sidebar-nav">
-      <router-link v-for="item in items" :key="item.path" :to="item.path" class="sidebar-link" @click="$emit('close')">
+      <router-link
+        v-for="item in items"
+        :key="item.path"
+        :to="item.path"
+        class="sidebar-link"
+        @click="$emit('close')"
+      >
         {{ item.label }}
+        <span v-if="item.path === '/termine' && hasNew" class="notification-dot" :title="`${newCount} neue Termine`"></span>
       </router-link>
     </div>
     <button class="sidebar-logout" @click="logout">Abmelden</button>
@@ -11,13 +18,17 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+import { onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { api } from '../api.js'
+import { useAppointmentNotifications } from '../composables/useAppointmentNotifications.js'
 
 defineProps({ open: { type: Boolean, default: false } })
 defineEmits(['close'])
 
 const router = useRouter()
+const route = useRoute()
+const { hasNew, newCount, refresh } = useAppointmentNotifications()
 
 const items = [
   { path: '/auftraege', label: 'Aufträge' },
@@ -28,6 +39,9 @@ const items = [
   { path: '/geschaeftszahlen', label: 'Geschäftszahlen' },
   { path: '/termine', label: 'Termine' },
 ]
+
+onMounted(refresh)
+watch(() => route.path, refresh)
 
 async function logout() {
   await api.post('auth.php?action=logout')
@@ -65,7 +79,9 @@ async function logout() {
 }
 
 .sidebar-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 9px 14px;
   text-decoration: none;
   color: #4b5563;
@@ -73,6 +89,14 @@ async function logout() {
   font-weight: 500;
   border-radius: 7px;
   transition: background 0.1s ease, color 0.1s ease;
+}
+
+.notification-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2626;
 }
 
 .sidebar-link:hover {

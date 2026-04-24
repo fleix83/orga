@@ -5,6 +5,21 @@ requireAuth();
 $method = getMethod();
 $id = getParam('id');
 
+// Lightweight count of appointments created since a given timestamp.
+// Used by the sidebar to show a red-dot notification for new appointments.
+// Returns the server's current time so the client can use it as a TZ-safe baseline.
+if ($method === 'GET' && getParam('new_count')) {
+    $since = getParam('since');
+    if ($since) {
+        $stmt = $pdo->prepare('SELECT COUNT(*) AS c, NOW() AS server_time FROM events WHERE user_id = 1 AND created_at > ?');
+        $stmt->execute([$since]);
+    } else {
+        $stmt = $pdo->query('SELECT COUNT(*) AS c, NOW() AS server_time FROM events WHERE user_id = 1');
+    }
+    $row = $stmt->fetch();
+    jsonResponse(['count' => (int)$row['c'], 'server_time' => $row['server_time']]);
+}
+
 if ($method === 'GET') {
     $stmt = $pdo->query('
         SELECT
