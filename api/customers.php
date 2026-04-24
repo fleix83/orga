@@ -5,8 +5,15 @@ requireAuth();
 $method = getMethod();
 $id = getParam('id');
 
-// GET: List all or single customer
+// GET: List, single customer, or next available customer number
 if ($method === 'GET') {
+    if (getParam('next_number')) {
+        $stmt = $pdo->query("SELECT MAX(CAST(customer_number AS UNSIGNED)) AS max_num FROM customers WHERE customer_number REGEXP '^[0-9]+$'");
+        $row = $stmt->fetch();
+        $next = ((int)($row['max_num'] ?? 0)) + 1;
+        jsonResponse(['next_number' => str_pad((string)$next, 2, '0', STR_PAD_LEFT)]);
+    }
+
     if ($id) {
         $stmt = $pdo->prepare('
             SELECT c.*,

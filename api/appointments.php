@@ -34,6 +34,7 @@ if ($method === 'GET') {
             et.name AS event_type,
             et.color,
             c.id AS customer_id,
+            c.customer_number,
             c.first_name AS customer_first_name,
             c.last_name AS customer_last_name,
             c.email AS customer_email,
@@ -56,12 +57,12 @@ if ($method === 'PUT' && $id) {
     $data = getJsonBody();
     $fields = [];
     $params = [];
-    $allowed = ['status', 'notes'];
+    $allowed = ['status', 'notes', 'event_date', 'start_slot', 'end_slot', 'customer_id', 'title'];
 
     foreach ($allowed as $field) {
         if (array_key_exists($field, $data)) {
             $fields[] = "`$field` = ?";
-            $params[] = $data[$field];
+            $params[] = $data[$field] === '' ? null : $data[$field];
         }
     }
 
