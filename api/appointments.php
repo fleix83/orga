@@ -74,28 +74,75 @@ if ($method === 'PUT' && $id) {
     jsonResponse(['success' => true]);
 }
 
-// POST: Create manual appointment
+// POST: Create manual appointment (and a matching Auftrag if a customer is set)
 if ($method === 'POST') {
     $data = getJsonBody();
 
     // Use "Termine Kunden Bewerbungen & Mehr" event type (id=1)
     $eventTypeId = 1;
+    $startSlot = (int)($data['start_slot'] ?? 9);
+    $endSlot = (int)($data['end_slot'] ?? 10);
+    $customerId = !empty($data['customer_id']) ? (int)$data['customer_id'] : null;
 
-    $stmt = $pdo->prepare('
-        INSERT INTO events (user_id, event_type_id, event_date, start_slot, end_slot, customer_id, title, notes, status)
-        VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)
-    ');
-    $stmt->execute([
-        $eventTypeId,
-        $data['event_date'],
-        $data['start_slot'] ?? 9,
-        $data['end_slot'] ?? 10,
-        $data['customer_id'] ?: null,
-        $data['title'] ?? null,
-        $data['notes'] ?? null,
-        $data['status'] ?? 'confirmed',
-    ]);
-    jsonResponse(['id' => (int)$pdo->lastInsertId()], 201);
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare('
+            INSERT INTO events (user_id, event_type_id, event_date, start_slot, end_slot, customer_id, title, notes, status)
+            VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)
+        ');
+        $stmt->execute([
+            $eventTypeId,
+            $data['event_date'],
+            $startSlot,
+            $endSlot,
+            $customerId,
+            $data['title'] ?? null,
+            $data['notes'] ?? null,
+            $data['status'] ?? 'confirmed',
+        ]);
+        $eventId = (int)$pdo->lastInsertId();
+
+        // Auto-generate a matching Auftrag. Skipped if no customer is selected,
+        // since orders.customer_id is NOT NULL.
+        $orderId = null;
+        if ($customerId) {
+            $catStmt = $pdo->query('SELECT id FROM categories WHERE active = 1 ORDER BY sort_order, id LIMIT 1');
+            $cat = $catStmt->fetch();
+            $categoryId = $cat ? (int)$cat['id'] : 1;
+
+            $numStmt = $pdo->query("SELECT MAX(CAST(order_number AS UNSIGNED)) AS max_num FROM orders WHERE order_number REGEXP '^[0-9]+$'");
+            $row = $numStmt->fetch();
+            $orderNumber = str_pad((string)(((int)($row['max_num'] ?? 0)) + 1), 2, '0', STR_PAD_LEFT);
+
+            $duration = max(0, ($endSlot - $startSlot) * 60);
+            $title = $data['title'] ?? null;
+            $notes = $data['notes'] ?? null;
+            $combined = trim(($title ?? '') . ($title && $notes ? "\n" : '') . ($notes ?? ''));
+            if ($combined === '') $combined = null;
+
+            $orderStmt = $pdo->prepare('
+                INSERT INTO orders (order_number, order_date, customer_id, category_id, location_type, amount, duration_minutes, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ');
+            $orderStmt->execute([
+                $orderNumber,
+                $data['event_date'],
+                $customerId,
+                $categoryId,
+                'vor_ort',
+                0,
+                $duration,
+                $combined,
+            ]);
+            $orderId = (int)$pdo->lastInsertId();
+        }
+
+        $pdo->commit();
+        jsonResponse(['id' => $eventId, 'order_id' => $orderId], 201);
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        jsonResponse(['error' => 'Fehler beim Erstellen: ' . $e->getMessage()], 500);
+    }
 }
 
 // DELETE: Delete appointment
