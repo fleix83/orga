@@ -20,8 +20,10 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api.js'
+import { useAuth } from '../composables/useAuth.js'
 
 const router = useRouter()
+const { setAuthenticated } = useAuth()
 const username = ref('')
 const password = ref('')
 const error = ref('')
@@ -30,6 +32,7 @@ async function login() {
   error.value = ''
   try {
     await api.post('auth.php', { username: username.value, password: password.value })
+    setAuthenticated(true)
     router.push('/')
   } catch (e) {
     error.value = e.message

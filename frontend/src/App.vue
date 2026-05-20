@@ -22,41 +22,32 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { api } from './api.js'
 import Sidebar from './components/Sidebar.vue'
+import { useAuth } from './composables/useAuth.js'
 
 const router = useRouter()
 const route = useRoute()
-const loading = ref(true)
-const authenticated = ref(false)
 const sidebarOpen = ref(false)
+
+const { authenticated, ready, checkAuth } = useAuth()
+const loading = computed(() => !ready.value)
 
 const isLoginPage = computed(() => route.path === '/login')
 
 onMounted(async () => {
-  try {
-    const res = await api.get('auth.php?action=check')
-    authenticated.value = res.authenticated
-  } catch {
-    authenticated.value = false
-  }
-
+  await checkAuth()
   if (!authenticated.value && route.path !== '/login') {
     router.push('/login')
   }
-  loading.value = false
 })
 
 router.beforeEach((to) => {
-  if (!to.meta.noAuth && !authenticated.value && !loading.value) {
+  if (!to.meta.noAuth && !authenticated.value && ready.value) {
     return '/login'
   }
 })
 
-watch(() => route.path, (path) => {
-  if (path !== '/login') {
-    authenticated.value = true
-  }
+watch(() => route.path, () => {
   sidebarOpen.value = false
 })
 </script>

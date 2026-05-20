@@ -22,6 +22,7 @@ import { onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { api } from '../api.js'
 import { useAppointmentNotifications } from '../composables/useAppointmentNotifications.js'
+import { useAuth } from '../composables/useAuth.js'
 import logoUrl from '../assets/orga-logo.png'
 
 defineProps({ open: { type: Boolean, default: false } })
@@ -30,6 +31,7 @@ defineEmits(['close'])
 const router = useRouter()
 const route = useRoute()
 const { hasNew, newCount, refresh } = useAppointmentNotifications()
+const { setAuthenticated } = useAuth()
 
 const items = [
   { path: '/auftraege', label: 'Buchung' },
@@ -46,6 +48,7 @@ watch(() => route.path, refresh)
 
 async function logout() {
   await api.post('auth.php?action=logout')
+  setAuthenticated(false)
   router.push('/login')
 }
 </script>
