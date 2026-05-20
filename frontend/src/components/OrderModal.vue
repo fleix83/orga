@@ -1,19 +1,35 @@
 <template>
   <div class="modal-overlay" @click.self="$emit('close')">
     <div class="modal">
-      <h2>{{ order.id ? 'Auftrag bearbeiten' : 'Neuer Auftrag' }}</h2>
+      <h2>{{ order.id ? 'Buchung bearbeiten' : 'Neue Buchung' }}</h2>
 
-      <div class="modal-grid">
+      <div class="modal-grid modal-grid-3">
         <div class="form-group">
           <label>Datum</label>
           <input v-model="form.order_date" type="date" required>
         </div>
         <div class="form-group">
-          <label>Vor Ort / Remote</label>
-          <select v-model="form.location_type">
-            <option value="vor_ort">Vor Ort</option>
-            <option value="remote">Remote</option>
-          </select>
+          <label>Uhrzeit</label>
+          <input v-model="form.order_time" type="time">
+        </div>
+        <div class="form-group">
+          <label>Ort</label>
+          <div class="seg-switch" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              :aria-selected="form.location_type === 'vor_ort'"
+              :class="['seg-option', { active: form.location_type === 'vor_ort' }]"
+              @click="form.location_type = 'vor_ort'"
+            >Vor Ort</button>
+            <button
+              type="button"
+              role="tab"
+              :aria-selected="form.location_type === 'remote'"
+              :class="['seg-option', { active: form.location_type === 'remote' }]"
+              @click="form.location_type = 'remote'"
+            >Remote</button>
+          </div>
         </div>
       </div>
 
@@ -104,6 +120,7 @@ const dropdownRef = ref(null)
 
 const form = ref({
   order_date: props.order.order_date || new Date().toISOString().slice(0, 10),
+  order_time: normalizeTime(props.order.order_time),
   customer_id: props.order.customer_id || null,
   category_id: props.order.category_id || 1,
   location_type: props.order.location_type || 'vor_ort',
@@ -111,6 +128,12 @@ const form = ref({
   duration_minutes: props.order.duration_minutes ?? null,
   notes: props.order.notes || '',
 })
+
+// MySQL returns TIME as "HH:MM:SS"; <input type="time"> expects "HH:MM".
+function normalizeTime(t) {
+  if (!t) return ''
+  return typeof t === 'string' && t.length >= 5 ? t.slice(0, 5) : t
+}
 
 const selectableServices = computed(() =>
   availableServices.value.filter(s => s.name && s.name.trim())
@@ -189,6 +212,7 @@ async function save() {
   }
 
   const payload = { ...form.value, services }
+  if (!payload.order_time) payload.order_time = null
 
   if (props.order.id) {
     await api.put(`orders.php?id=${props.order.id}`, payload)
@@ -204,6 +228,48 @@ async function save() {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
+}
+
+.modal-grid-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+@media (max-width: 560px) {
+  .modal-grid-3 { grid-template-columns: 1fr; }
+}
+
+/* Segmented switch — two equal-width tabs */
+.seg-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.seg-option {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+  white-space: nowrap;
+}
+
+.seg-option:hover { color: #111827; }
+
+.seg-option.active {
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.08);
 }
 
 .multi-select {

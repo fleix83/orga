@@ -120,13 +120,16 @@ if ($method === 'POST') {
             $combined = trim(($title ?? '') . ($title && $notes ? "\n" : '') . ($notes ?? ''));
             if ($combined === '') $combined = null;
 
+            $orderTime = sprintf('%02d:00:00', $startSlot);
+
             $orderStmt = $pdo->prepare('
-                INSERT INTO orders (order_number, order_date, customer_id, category_id, location_type, amount, duration_minutes, notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO orders (order_number, order_date, order_time, customer_id, category_id, location_type, amount, duration_minutes, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ');
             $orderStmt->execute([
                 $orderNumber,
                 $data['event_date'],
+                $orderTime,
                 $customerId,
                 $categoryId,
                 'vor_ort',

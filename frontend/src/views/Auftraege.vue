@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="page-header">
-      <h1>Aufträge</h1>
-      <button class="btn btn-primary" @click="showModal = true; editOrder = {}">+ Neuer Auftrag</button>
+      <h1>Buchung</h1>
+      <button class="btn btn-primary" @click="showModal = true; editOrder = {}">+ Neue Buchung</button>
     </div>
 
     <div class="table-wrap">
@@ -43,7 +43,7 @@
 
     <ConfirmDialog
       :visible="!!deleteTarget"
-      message="Auftrag wirklich löschen?"
+      message="Buchung wirklich löschen?"
       @confirm="doDelete"
       @cancel="deleteTarget = null"
     />

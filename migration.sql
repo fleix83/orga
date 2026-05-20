@@ -24,10 +24,11 @@ INSERT INTO `categories` (`name`, `sort_order`) VALUES
 ('Studio LUMINELLI', 2),
 ('Araceli', 3);
 
--- 3. Orders (Auftraege)
+-- 3. Orders (Auftraege / Buchung)
 CREATE TABLE `orders` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `order_date` DATE NOT NULL,
+  `order_time` TIME DEFAULT NULL,
   `customer_id` INT(11) NOT NULL,
   `category_id` INT(11) NOT NULL,
   `location_type` ENUM('vor_ort', 'remote') NOT NULL DEFAULT 'vor_ort',
@@ -42,6 +43,9 @@ CREATE TABLE `orders` (
   CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE,
   CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- For existing installs (orders table already created without order_time):
+-- ALTER TABLE `orders` ADD COLUMN `order_time` TIME DEFAULT NULL AFTER `order_date`;
 
 -- 4. Order Services (Dienstleistungen pro Auftrag)
 CREATE TABLE `order_services` (

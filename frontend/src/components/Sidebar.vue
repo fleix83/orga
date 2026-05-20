@@ -31,7 +31,7 @@ const route = useRoute()
 const { hasNew, newCount, refresh } = useAppointmentNotifications()
 
 const items = [
-  { path: '/auftraege', label: 'Aufträge' },
+  { path: '/auftraege', label: 'Buchung' },
   { path: '/kunden', label: 'Kunden' },
   { path: '/dienstleistungen', label: 'Dienstleistungen' },
   { path: '/inventar', label: 'Inventar' },
