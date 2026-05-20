@@ -1,6 +1,6 @@
 <template>
   <nav class="sidebar" :class="{ open }">
-    <div class="sidebar-title">Orga</div>
+    <img :src="logoUrl" alt="Orga" class="sidebar-logo">
     <div class="sidebar-nav">
       <router-link
         v-for="item in items"
@@ -22,6 +22,7 @@ import { onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { api } from '../api.js'
 import { useAppointmentNotifications } from '../composables/useAppointmentNotifications.js'
+import logoUrl from '../assets/orga-logo.png'
 
 defineProps({ open: { type: Boolean, default: false } })
 defineEmits(['close'])
@@ -63,12 +64,13 @@ async function logout() {
   flex-direction: column;
 }
 
-.sidebar-title {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
-  padding: 0 24px 24px;
-  color: #111827;
+.sidebar-logo {
+  display: block;
+  width: 130px;
+  height: auto;
+  margin: 0 24px 24px;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .sidebar-nav {
@@ -130,7 +132,7 @@ async function logout() {
     padding: 68px 0 24px;
     background: #fff;
   }
-  .sidebar-title {
+  .sidebar-logo {
     display: none;
   }
   .sidebar-nav { padding: 0 16px; }
