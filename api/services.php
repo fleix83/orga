@@ -19,12 +19,13 @@ if ($method === 'GET') {
 
 if ($method === 'POST') {
     $data = getJsonBody();
-    $stmt = $pdo->prepare('INSERT INTO services (name, price, description, active, sort_order, duration_slots) VALUES (?, ?, ?, ?, ?, ?)');
+    $stmt = $pdo->prepare('INSERT INTO services (name, price, description, active, is_public, sort_order, duration_slots) VALUES (?, ?, ?, ?, ?, ?, ?)');
     $stmt->execute([
         $data['name'] ?? '',
         $data['price'] ?? 0,
         $data['description'] ?? null,
         $data['active'] ?? 1,
+        $data['is_public'] ?? 1,
         $data['sort_order'] ?? 0,
         $data['duration_slots'] ?? 1,
     ]);
@@ -35,7 +36,7 @@ if ($method === 'PUT' && $id) {
     $data = getJsonBody();
     $fields = [];
     $params = [];
-    $allowed = ['name', 'price', 'description', 'active', 'sort_order', 'duration_slots'];
+    $allowed = ['name', 'price', 'description', 'active', 'is_public', 'sort_order', 'duration_slots'];
 
     foreach ($allowed as $field) {
         if (array_key_exists($field, $data)) {

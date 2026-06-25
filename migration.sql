@@ -95,3 +95,11 @@ CREATE TABLE `app_users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 8. Services: Online-Sichtbarkeit
+-- Gemeinsam mit dem Terminmanager genutzte `services`-Tabelle.
+-- 1 = oeffentlich online buchbar (Standard), 0 = nur intern (z. B. "Miete Araceli").
+-- Unabhaengig von `active` (active = existiert/nicht stillgelegt).
+-- Der Terminmanager filtert die oeffentliche Buchungsliste mit WHERE active = 1 AND is_public = 1.
+ALTER TABLE `services`
+  ADD COLUMN IF NOT EXISTS `is_public` TINYINT(1) NOT NULL DEFAULT 1 AFTER `active`;
