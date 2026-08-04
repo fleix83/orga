@@ -22,7 +22,11 @@
         <tr v-for="o in sorted" :key="o.id" class="clickable-row" @click="edit(o)">
           <td>{{ formatDate(o.order_date) }}</td>
           <td>{{ o.order_number || '–' }}</td>
-          <td>{{ o.customer_first_name }} {{ o.customer_last_name }}</td>
+          <td>
+            <span class="customer-link" @click.stop="openCustomer(o.customer_id)">
+              {{ o.customer_first_name }} {{ o.customer_last_name }}
+            </span>
+          </td>
           <td>{{ o.service_names || '–' }}</td>
           <td>{{ o.notes && o.notes.length > 50 ? o.notes.slice(0, 50) + '...' : (o.notes || '–') }}</td>
           <td style="text-align:right">{{ Number(o.amount).toFixed(2) }}</td>
@@ -41,6 +45,13 @@
       @saved="showModal = false; load()"
     />
 
+    <CustomerModal
+      v-if="customerModalId"
+      :customer-id="customerModalId"
+      @close="customerModalId = null"
+      @saved="customerModalId = null; load()"
+    />
+
     <ConfirmDialog
       :visible="!!deleteTarget"
       message="Buchung wirklich löschen?"
@@ -54,6 +65,7 @@
 import { ref, onMounted } from 'vue'
 import { api } from '../api.js'
 import OrderModal from '../components/OrderModal.vue'
+import CustomerModal from '../components/CustomerModal.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import { useSort } from '../composables/useSort.js'
 import { formatDate } from '../utils/formatDate.js'
@@ -62,6 +74,7 @@ const orders = ref([])
 const showModal = ref(false)
 const editOrder = ref({})
 const deleteTarget = ref(null)
+const customerModalId = ref(null)
 
 const { sorted, toggleSort, sortClass } = useSort(orders, 'order_date', 'desc')
 
@@ -76,6 +89,10 @@ function edit(order) {
   showModal.value = true
 }
 
+function openCustomer(customerId) {
+  if (customerId) customerModalId.value = customerId
+}
+
 function confirmDelete(order) { deleteTarget.value = order }
 
 async function doDelete() {
@@ -87,4 +104,17 @@ async function doDelete() {
 
 <style scoped>
 .clickable-row { cursor: pointer; }
+
+.customer-link {
+  cursor: pointer;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: #d1d5db;
+  text-underline-offset: 3px;
+}
+
+.customer-link:hover {
+  color: #111827;
+  text-decoration-color: #9ca3af;
+}
 </style>

@@ -1,6 +1,41 @@
 <?php
 // Copy this file to config.php and update credentials
+
+// Log out after 120 minutes without a request
+const SESSION_LIFETIME = 7200;
+
+// Set session cookie params for iOS Safari / mobile compatibility
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+$cookieParams = [
+    'lifetime' => SESSION_LIFETIME,
+    'path' => '/',
+    'domain' => '',
+    'secure' => $isHttps,
+    'httponly' => true,
+    'samesite' => 'Lax',
+];
+
+ini_set('session.gc_maxlifetime', (string)SESSION_LIFETIME);
+session_set_cookie_params($cookieParams);
+
 session_start();
+
+// Server-side idle timeout — gc_maxlifetime alone is unreliable when other apps
+// share the session save path and garbage-collect with a shorter lifetime.
+if (!empty($_SESSION['last_activity']) && time() - $_SESSION['last_activity'] > SESSION_LIFETIME) {
+    $_SESSION = [];
+}
+$_SESSION['last_activity'] = time();
+
+// Slide the cookie expiry forward so an active user is not logged out mid-session.
+if (!empty($_SESSION['user_id'])) {
+    $refresh = $cookieParams;
+    unset($refresh['lifetime']);
+    $refresh['expires'] = time() + SESSION_LIFETIME;
+    setcookie(session_name(), session_id(), $refresh);
+}
 
 // DB connection
 $host = 'localhost';

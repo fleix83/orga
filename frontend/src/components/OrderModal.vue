@@ -36,9 +36,30 @@
       <div class="modal-grid">
         <div class="form-group">
           <label>Kunde</label>
-          <select v-model="form.customer_id">
-            <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.first_name }} {{ c.last_name }}</option>
-          </select>
+          <div class="multi-select" ref="customerRef">
+            <button type="button" class="multi-select-trigger" @click="toggleCustomerDropdown">
+              <span>{{ selectedCustomerLabel }}</span>
+              <span class="chevron">▾</span>
+            </button>
+            <div v-if="customerOpen" class="multi-select-panel">
+              <div class="dropdown-search">
+                <input
+                  ref="customerSearchRef"
+                  v-model="customerSearch"
+                  type="text"
+                  placeholder="Kunde suchen..."
+                >
+              </div>
+              <button
+                v-for="c in filteredCustomers"
+                :key="c.id"
+                type="button"
+                :class="['dropdown-option', { selected: Number(c.id) === Number(form.customer_id) }]"
+                @click="selectCustomer(c)"
+              >{{ c.first_name }} {{ c.last_name }}</button>
+              <div v-if="!filteredCustomers.length" class="dropdown-empty">Keine Kunden gefunden</div>
+            </div>
+          </div>
         </div>
         <div class="form-group">
           <label>Zuordnung</label>
@@ -98,7 +119,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import { api } from '../api.js'
 
 const props = defineProps({
@@ -118,6 +139,11 @@ const customServicePrice = ref(0)
 const dropdownOpen = ref(false)
 const dropdownRef = ref(null)
 
+const customerOpen = ref(false)
+const customerRef = ref(null)
+const customerSearchRef = ref(null)
+const customerSearch = ref('')
+
 const form = ref({
   order_date: props.order.order_date || new Date().toISOString().slice(0, 10),
   order_time: normalizeTime(props.order.order_time),
@@ -133,6 +159,32 @@ const form = ref({
 function normalizeTime(t) {
   if (!t) return ''
   return typeof t === 'string' && t.length >= 5 ? t.slice(0, 5) : t
+}
+
+const selectedCustomerLabel = computed(() => {
+  const c = customers.value.find(x => Number(x.id) === Number(form.value.customer_id))
+  return c ? `${c.first_name} ${c.last_name}`.trim() : 'Auswählen...'
+})
+
+const filteredCustomers = computed(() => {
+  const q = customerSearch.value.trim().toLowerCase()
+  if (!q) return customers.value
+  return customers.value.filter(c =>
+    `${c.first_name} ${c.last_name}`.toLowerCase().includes(q)
+  )
+})
+
+function toggleCustomerDropdown() {
+  customerOpen.value = !customerOpen.value
+  if (customerOpen.value) {
+    customerSearch.value = ''
+    nextTick(() => customerSearchRef.value?.focus())
+  }
+}
+
+function selectCustomer(customer) {
+  form.value.customer_id = customer.id
+  customerOpen.value = false
 }
 
 const selectableServices = computed(() =>
@@ -166,6 +218,9 @@ watch(calculatedAmount, (val) => {
 function handleClickOutside(e) {
   if (dropdownOpen.value && dropdownRef.value && !dropdownRef.value.contains(e.target)) {
     dropdownOpen.value = false
+  }
+  if (customerOpen.value && customerRef.value && !customerRef.value.contains(e.target)) {
+    customerOpen.value = false
   }
 }
 
@@ -320,6 +375,50 @@ async function save() {
   max-height: 280px;
   overflow-y: auto;
   padding: 6px;
+}
+
+/* Search box pinned above the option list */
+.dropdown-search {
+  position: sticky;
+  top: -6px;
+  background: #fff;
+  padding: 2px 2px 8px;
+  margin: -2px -2px 2px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.dropdown-search input {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.dropdown-option {
+  display: block;
+  width: 100%;
+  appearance: none;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 14px;
+  color: #111827;
+  cursor: pointer;
+}
+
+.dropdown-option:hover { background: #f9fafb; }
+
+.dropdown-option.selected {
+  background: #f3f4f6;
+  font-weight: 600;
+}
+
+.dropdown-empty {
+  padding: 10px;
+  font-size: 13px;
+  color: #9ca3af;
+  text-align: center;
 }
 
 .multi-select-option {
