@@ -45,7 +45,11 @@
         <div class="form-group">
           <label>Kunde</label>
           <div class="multi-select" ref="customerRef">
-            <button type="button" class="multi-select-trigger" @click="toggleCustomerDropdown">
+            <button
+              type="button"
+              :class="['multi-select-trigger', { invalid: saveError && !form.customer_id }]"
+              @click="toggleCustomerDropdown"
+            >
               <span>{{ selectedCustomerLabel }}</span>
               <span class="chevron">▾</span>
             </button>
@@ -117,6 +121,8 @@
         <label>Anmerkungen</label>
         <textarea v-model="form.notes" rows="3"></textarea>
       </div>
+
+      <div v-if="saveError" class="save-error">{{ saveError }}</div>
 
       <div class="form-actions">
         <button class="btn" @click="$emit('close')">Abbrechen</button>
@@ -208,6 +214,7 @@ function toggleCustomerDropdown() {
 function selectCustomer(customer) {
   form.value.customer_id = customer.id
   customerOpen.value = false
+  saveError.value = ''
 }
 
 const selectableServices = computed(() =>
@@ -279,7 +286,15 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
+const saveError = ref('')
+
 async function save() {
+  if (!form.value.customer_id) {
+    saveError.value = 'Bitte einen Kunden auswählen.'
+    return
+  }
+  saveError.value = ''
+
   const services = []
   for (const id of selectedServiceIds.value) {
     const svc = availableServices.value.find(s => s.id === id)
@@ -292,12 +307,16 @@ async function save() {
   const payload = { ...form.value, services }
   if (!payload.order_time) payload.order_time = null
 
-  if (props.order.id) {
-    await api.put(`orders.php?id=${props.order.id}`, payload)
-  } else {
-    await api.post('orders.php', payload)
+  try {
+    if (props.order.id) {
+      await api.put(`orders.php?id=${props.order.id}`, payload)
+    } else {
+      await api.post('orders.php', payload)
+    }
+    emit('saved')
+  } catch (e) {
+    saveError.value = e.message || 'Speichern fehlgeschlagen.'
   }
-  emit('saved')
 }
 </script>
 
@@ -399,6 +418,15 @@ async function save() {
 }
 
 .multi-select-trigger:hover { border-color: #d1d5db; }
+
+.multi-select-trigger.invalid,
+.multi-select-trigger.invalid:hover { border-color: #dc2626; }
+
+.save-error {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #dc2626;
+}
 
 .multi-select-trigger span:first-child {
   overflow: hidden;

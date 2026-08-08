@@ -130,7 +130,8 @@ async function doDelete() {
   white-space: nowrap;
 }
 
-/* Blau = pendent (zukünftig oder manuell), Grün = erledigt */
+/* Blau = pendent (zukünftig oder manuell); erledigte Buchungen bleiben ohne Punkt,
+   der Platzhalter hält die Daten aller Zeilen bündig. */
 .status-indicator {
   width: 7px;
   height: 7px;
@@ -139,7 +140,6 @@ async function doDelete() {
 }
 
 .status-indicator.pending { background: #3b82f6; }
-.status-indicator.done { background: #10b981; }
 
 /* Erledigte Buchungen: Text leicht abgedunkelt, klar unterscheidbar von pendenten */
 .row-done td,
