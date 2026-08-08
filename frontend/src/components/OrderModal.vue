@@ -1,7 +1,15 @@
 <template>
   <div class="modal-overlay" @click.self="$emit('close')">
     <div class="modal">
-      <h2>{{ order.id ? 'Buchung bearbeiten' : 'Neue Buchung' }}</h2>
+      <h2 class="modal-title">
+        {{ order.id ? 'Buchung bearbeiten' : 'Neue Buchung' }}
+        <button
+          type="button"
+          :class="['status-dot', statusClass]"
+          :title="statusLabel"
+          @click="cycleStatus"
+        ></button>
+      </h2>
 
       <div class="modal-grid modal-grid-3">
         <div class="form-group">
@@ -150,10 +158,25 @@ const form = ref({
   customer_id: props.order.customer_id || null,
   category_id: props.order.category_id || 1,
   location_type: props.order.location_type || 'vor_ort',
+  status: props.order.status || null,
   amount: props.order.amount || 0,
   duration_minutes: props.order.duration_minutes ?? null,
   notes: props.order.notes || '',
 })
+
+// Status dot: grey = automatisch (nach Datum), blau = manuell pendent, grün = erledigt
+const statusClass = computed(() => form.value.status || 'auto')
+
+const statusLabel = computed(() => ({
+  pending: 'Status: Pendent (manuell)',
+  done: 'Status: Erledigt',
+}[form.value.status] || 'Status: Automatisch (nach Datum)'))
+
+function cycleStatus() {
+  const next = { auto: 'pending', pending: 'done', done: 'auto' }
+  const val = next[form.value.status || 'auto']
+  form.value.status = val === 'auto' ? null : val
+}
 
 // MySQL returns TIME as "HH:MM:SS"; <input type="time"> expects "HH:MM".
 function normalizeTime(t) {
@@ -279,6 +302,34 @@ async function save() {
 </script>
 
 <style scoped>
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Status dot: grey = automatisch, blau = pendent (manuell), grün = erledigt */
+.status-dot {
+  appearance: none;
+  border: none;
+  padding: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #d1d5db;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s ease, box-shadow 0.12s ease;
+}
+
+.status-dot:hover { box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.06); }
+
+.status-dot.pending { background: #3b82f6; }
+.status-dot.pending:hover { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+
+.status-dot.done { background: #10b981; }
+.status-dot.done:hover { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15); }
+
 .modal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

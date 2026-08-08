@@ -32,6 +32,7 @@ CREATE TABLE `orders` (
   `customer_id` INT(11) NOT NULL,
   `category_id` INT(11) NOT NULL,
   `location_type` ENUM('vor_ort', 'remote') NOT NULL DEFAULT 'vor_ort',
+  `status` ENUM('pending', 'done') DEFAULT NULL,
   `amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   `notes` TEXT DEFAULT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -46,6 +47,10 @@ CREATE TABLE `orders` (
 
 -- For existing installs (orders table already created without order_time):
 -- ALTER TABLE `orders` ADD COLUMN `order_time` TIME DEFAULT NULL AFTER `order_date`;
+
+-- For existing installs (orders table already created without status):
+-- NULL = automatic (derived from order_date: future = pending, past = done), otherwise manually set.
+-- ALTER TABLE `orders` ADD COLUMN `status` ENUM('pending', 'done') DEFAULT NULL AFTER `location_type`;
 
 -- 4. Order Services (Dienstleistungen pro Auftrag)
 CREATE TABLE `order_services` (

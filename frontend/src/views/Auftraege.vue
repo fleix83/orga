@@ -19,8 +19,18 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="o in sorted" :key="o.id" class="clickable-row" @click="edit(o)">
-          <td>{{ formatDate(o.order_date) }}</td>
+        <tr
+          v-for="o in sorted"
+          :key="o.id"
+          :class="['clickable-row', { 'row-done': effectiveStatus(o) === 'done' }]"
+          @click="edit(o)"
+        >
+          <td>
+            <span class="date-cell">
+              <span :class="['status-indicator', effectiveStatus(o)]"></span>
+              {{ formatDate(o.order_date) }}
+            </span>
+          </td>
           <td>{{ o.order_number || '–' }}</td>
           <td>
             <span class="customer-link" @click.stop="openCustomer(o.customer_id)">
@@ -89,6 +99,14 @@ function edit(order) {
   showModal.value = true
 }
 
+// Manually set status wins; otherwise derived from the date (today counts as pending).
+function effectiveStatus(order) {
+  if (order.status) return order.status
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  return String(order.order_date).slice(0, 10) >= today ? 'pending' : 'done'
+}
+
 function openCustomer(customerId) {
   if (customerId) customerModalId.value = customerId
 }
@@ -104,6 +122,30 @@ async function doDelete() {
 
 <style scoped>
 .clickable-row { cursor: pointer; }
+
+.date-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* Blau = pendent (zukünftig oder manuell), Grün = erledigt */
+.status-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-indicator.pending { background: #3b82f6; }
+.status-indicator.done { background: #10b981; }
+
+/* Erledigte Buchungen: Text leicht abgedunkelt, klar unterscheidbar von pendenten */
+.row-done td,
+.row-done .customer-link {
+  color: #6b7280;
+}
 
 .customer-link {
   cursor: pointer;
