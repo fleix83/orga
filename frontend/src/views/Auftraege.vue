@@ -139,7 +139,7 @@ async function doDelete() {
   flex-shrink: 0;
 }
 
-.status-indicator.pending { background: #3b82f6; }
+.status-indicator.pending { background: #728fef; }
 
 /* Erledigte Buchungen: Text leicht abgedunkelt, klar unterscheidbar von pendenten */
 .row-done td,

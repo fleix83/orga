@@ -9,9 +9,9 @@ html, body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Source Sans 3', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: #111827;
-  background: #fff;
+  background: #eef2ff;
   font-size: 14px;
   line-height: 1.55;
   -webkit-text-size-adjust: 100%;

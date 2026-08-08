@@ -60,8 +60,8 @@ async function logout() {
   top: 0;
   bottom: 0;
   width: 220px;
-  background: #fafafa;
-  border-right: 1px solid #f3f4f6;
+  background: transparent;
+  border-right: 1px solid #e5e7eb;
   padding: 28px 0 16px;
   display: flex;
   flex-direction: column;
@@ -111,7 +111,7 @@ async function logout() {
 
 .sidebar-link.router-link-active {
   color: #111827;
-  background: #ffe98c78;
+  background: #ffe98b;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
@@ -133,7 +133,7 @@ async function logout() {
   .sidebar {
     width: 240px;
     padding: 68px 0 24px;
-    background: #fff;
+    background: #eef2ff; /* opak — Drawer schiebt sich über den Inhalt */
   }
   .sidebar-logo {
     display: none;

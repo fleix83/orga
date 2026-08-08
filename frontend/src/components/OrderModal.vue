@@ -343,8 +343,8 @@ async function save() {
 
 .status-dot:hover { box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.06); }
 
-.status-dot.pending { background: #3b82f6; }
-.status-dot.pending:hover { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+.status-dot.pending { background: #728fef; }
+.status-dot.pending:hover { box-shadow: 0 0 0 4px rgba(114, 143, 239, 0.2); }
 
 .status-dot.done { background: #10b981; }
 .status-dot.done:hover { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15); }
