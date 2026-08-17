@@ -12,7 +12,7 @@
           <th :class="sortClass('order_date')" @click="toggleSort('order_date')">Datum</th>
           <th :class="sortClass('order_number')" @click="toggleSort('order_number')">Nr.</th>
           <th :class="sortClass('customer_last_name')" @click="toggleSort('customer_last_name')">Kunde</th>
-          <th :class="sortClass('service_names')" @click="toggleSort('service_names')">Dienstleistungen</th>
+          <th class="col-services" :class="sortClass('service_names')" @click="toggleSort('service_names')">Dienstleistungen</th>
           <th class="col-amount" :class="sortClass('amount')" @click="toggleSort('amount')">Betrag</th>
           <th :class="sortClass('notes')" @click="toggleSort('notes')">Anmerkungen</th>
           <th></th>
@@ -37,7 +37,7 @@
               {{ o.customer_first_name }} {{ o.customer_last_name }}
             </span>
           </td>
-          <td>{{ o.service_names || '–' }}</td>
+          <td class="col-services" :title="o.service_names || ''">{{ o.service_names || '–' }}</td>
           <td class="col-amount">
             {{ Number(o.amount).toFixed(2) }}<span :class="['amount-check', { on: Number(o.amount_confirmed) }]">✓</span>
           </td>
@@ -143,6 +143,15 @@ async function doDelete() {
 }
 
 .status-indicator.pending { background: #728fef; }
+
+/* Dienstleistungen tightly capped (full text via tooltip / modal) so the
+   Betrag column stays prominent */
+.col-services {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* Narrow Betrag column; hidden check placeholder keeps the numbers aligned */
 .col-amount {
