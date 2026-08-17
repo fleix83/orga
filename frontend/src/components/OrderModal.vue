@@ -2,7 +2,7 @@
   <div class="modal-overlay" @click.self="$emit('close')">
     <div class="modal">
       <h2 class="modal-title">
-        {{ order.id ? 'Buchung bearbeiten' : 'Neue Buchung' }}
+        {{ currentId ? 'Buchung bearbeiten' : 'Neue Buchung' }}
         <button
           type="button"
           :class="['status-dot', statusClass]"
@@ -10,7 +10,7 @@
           @click="cycleStatus"
         ></button>
         <button
-          v-if="order.id"
+          v-if="currentId"
           type="button"
           class="new-from-link"
           @click="saveAsNew"
@@ -146,7 +146,11 @@ const props = defineProps({
   order: { type: Object, default: () => ({}) },
 })
 
-const emit = defineEmits(['close', 'saved'])
+const emit = defineEmits(['close', 'saved', 'created'])
+
+// Tracks which booking the modal is editing; changes when "New from Booking"
+// creates a fresh record that the modal then continues to edit.
+const currentId = ref(props.order.id || null)
 
 const customers = ref([])
 const availableServices = ref([])
@@ -318,8 +322,8 @@ async function save() {
 
   try {
     const payload = buildPayload()
-    if (props.order.id) {
-      await api.put(`orders.php?id=${props.order.id}`, payload)
+    if (currentId.value) {
+      await api.put(`orders.php?id=${currentId.value}`, payload)
     } else {
       await api.post('orders.php', payload)
     }
@@ -329,7 +333,8 @@ async function save() {
   }
 }
 
-// Creates a NEW booking from the current form data (the opened booking stays untouched).
+// Creates a NEW booking from the current form data (the opened booking stays
+// untouched) and keeps the modal open, now editing the new record.
 async function saveAsNew() {
   if (!form.value.customer_id) {
     saveError.value = 'Bitte einen Kunden auswählen.'
@@ -338,8 +343,9 @@ async function saveAsNew() {
   saveError.value = ''
 
   try {
-    await api.post('orders.php', buildPayload())
-    emit('saved')
+    const res = await api.post('orders.php', buildPayload())
+    currentId.value = res.id
+    emit('created')
   } catch (e) {
     saveError.value = e.message || 'Speichern fehlgeschlagen.'
   }

@@ -53,6 +53,7 @@
       :order="editOrder"
       @close="showModal = false"
       @saved="showModal = false; load()"
+      @created="load()"
     />
 
     <CustomerModal
