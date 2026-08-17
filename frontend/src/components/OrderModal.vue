@@ -409,13 +409,23 @@ async function saveAsNew() {
 
 .new-from-link:hover { color: #4c6ce0; text-decoration: underline; }
 
-/* Marks a freshly duplicated booking; same spot as the link, title-sized */
+/* Marks a freshly duplicated booking: big blue asterisk pinned to the
+   modal's top-right corner, on the title line / hamburger column */
+.modal { position: relative; }
+
 .new-indicator {
-  margin-left: auto;
-  color: #728fef;
-  font-size: inherit;
+  position: absolute;
+  top: 28px;
+  right: 24px;
+  font-size: 45px;
   line-height: 1;
+  color: #728fef;
   cursor: default;
+}
+
+@media (max-width: 768px) {
+  /* Full-screen modal: title starts below the fixed hamburger (top 72px) */
+  .new-indicator { top: 64px; }
 }
 
 .modal-grid {
