@@ -13,8 +13,8 @@
           <th :class="sortClass('order_number')" @click="toggleSort('order_number')">Nr.</th>
           <th :class="sortClass('customer_last_name')" @click="toggleSort('customer_last_name')">Kunde</th>
           <th :class="sortClass('service_names')" @click="toggleSort('service_names')">Dienstleistungen</th>
+          <th class="col-amount" :class="sortClass('amount')" @click="toggleSort('amount')">Betrag</th>
           <th :class="sortClass('notes')" @click="toggleSort('notes')">Anmerkungen</th>
-          <th style="text-align:right" :class="sortClass('amount')" @click="toggleSort('amount')">Betrag CHF</th>
           <th></th>
         </tr>
       </thead>
@@ -38,8 +38,10 @@
             </span>
           </td>
           <td>{{ o.service_names || '–' }}</td>
+          <td class="col-amount">
+            {{ Number(o.amount).toFixed(2) }}<span :class="['amount-check', { on: Number(o.amount_confirmed) }]">✓</span>
+          </td>
           <td>{{ o.notes && o.notes.length > 50 ? o.notes.slice(0, 50) + '...' : (o.notes || '–') }}</td>
-          <td style="text-align:right">{{ Number(o.amount).toFixed(2) }}</td>
           <td>
             <button class="btn btn-sm btn-danger" @click.stop="confirmDelete(o)">✕</button>
           </td>
@@ -141,6 +143,23 @@ async function doDelete() {
 }
 
 .status-indicator.pending { background: #728fef; }
+
+/* Narrow Betrag column; hidden check placeholder keeps the numbers aligned */
+.col-amount {
+  text-align: right;
+  white-space: nowrap;
+  width: 90px;
+}
+
+.amount-check {
+  display: inline-block;
+  width: 14px;
+  margin-left: 4px;
+  color: #10b981;
+  visibility: hidden;
+}
+
+.amount-check.on { visibility: visible; }
 
 /* Erledigte Buchungen: Text leicht abgedunkelt, klar unterscheidbar von pendenten */
 .row-done td,
