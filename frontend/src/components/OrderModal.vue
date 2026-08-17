@@ -9,6 +9,12 @@
           :title="statusLabel"
           @click="cycleStatus"
         ></button>
+        <button
+          v-if="order.id"
+          type="button"
+          class="new-from-link"
+          @click="saveAsNew"
+        >New from Booking</button>
       </h2>
 
       <div class="modal-grid modal-grid-3">
@@ -288,13 +294,7 @@ onBeforeUnmount(() => {
 
 const saveError = ref('')
 
-async function save() {
-  if (!form.value.customer_id) {
-    saveError.value = 'Bitte einen Kunden auswählen.'
-    return
-  }
-  saveError.value = ''
-
+function buildPayload() {
   const services = []
   for (const id of selectedServiceIds.value) {
     const svc = availableServices.value.find(s => s.id === id)
@@ -306,13 +306,39 @@ async function save() {
 
   const payload = { ...form.value, services }
   if (!payload.order_time) payload.order_time = null
+  return payload
+}
+
+async function save() {
+  if (!form.value.customer_id) {
+    saveError.value = 'Bitte einen Kunden auswählen.'
+    return
+  }
+  saveError.value = ''
 
   try {
+    const payload = buildPayload()
     if (props.order.id) {
       await api.put(`orders.php?id=${props.order.id}`, payload)
     } else {
       await api.post('orders.php', payload)
     }
+    emit('saved')
+  } catch (e) {
+    saveError.value = e.message || 'Speichern fehlgeschlagen.'
+  }
+}
+
+// Creates a NEW booking from the current form data (the opened booking stays untouched).
+async function saveAsNew() {
+  if (!form.value.customer_id) {
+    saveError.value = 'Bitte einen Kunden auswählen.'
+    return
+  }
+  saveError.value = ''
+
+  try {
+    await api.post('orders.php', buildPayload())
     emit('saved')
   } catch (e) {
     saveError.value = e.message || 'Speichern fehlgeschlagen.'
@@ -348,6 +374,23 @@ async function save() {
 
 .status-dot.done { background: #10b981; }
 .status-dot.done:hover { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15); }
+
+/* Quiet text link, pushed to the far right of the title row */
+.new-from-link {
+  appearance: none;
+  border: none;
+  background: transparent;
+  margin-left: auto;
+  padding: 2px 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #728fef;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.new-from-link:hover { color: #4c6ce0; text-decoration: underline; }
 
 .modal-grid {
   display: grid;
