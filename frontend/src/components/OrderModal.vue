@@ -18,7 +18,7 @@
           v-else-if="currentId"
           type="button"
           class="new-from-link"
-          @click="saveAsNew"
+          @click="requestSave('saveAsNew')"
         >New from Booking</button>
       </h2>
 
@@ -119,7 +119,10 @@
 
       <div class="modal-grid">
         <div class="form-group">
-          <label>Betrag CHF ({{ calculatedAmount.toFixed(2) }})</label>
+          <label>
+            Betrag CHF ({{ calculatedAmount.toFixed(2) }})
+            <span v-if="isAmountConfirmed" class="amount-confirmed-hint">✓ bestätigt</span>
+          </label>
           <input v-model.number="form.amount" type="number" step="0.01">
         </div>
         <div class="form-group">
@@ -137,7 +140,29 @@
 
       <div class="form-actions">
         <button class="btn" @click="$emit('close')">Abbrechen</button>
-        <button class="btn btn-primary" @click="save">Speichern</button>
+        <button class="btn btn-primary" @click="requestSave('save')">Speichern</button>
+      </div>
+    </div>
+
+    <!-- Final-Betrag confirmation for finished bookings (accounting) -->
+    <div v-if="confirmOpen" class="confirm-overlay" @click.self="confirmOpen = false">
+      <div class="confirm-box">
+        <h3>Betrag bestätigen</h3>
+        <p>Die Buchung ist abgeschlossen. Bitte den definitiven Betrag für die Buchhaltung bestätigen:</p>
+        <div class="confirm-amount">
+          <span class="confirm-currency">CHF</span>
+          <input
+            ref="confirmInputRef"
+            v-model.number="confirmAmount"
+            type="number"
+            step="0.01"
+            @keyup.enter="confirmAmountAndSave"
+          >
+        </div>
+        <div class="form-actions">
+          <button class="btn" @click="confirmOpen = false">Abbrechen</button>
+          <button class="btn btn-primary" @click="confirmAmountAndSave">Bestätigen</button>
+        </div>
       </div>
     </div>
   </div>
@@ -160,6 +185,15 @@ const currentId = ref(props.order.id || null)
 // True right after "New from Booking" — shows the asterisk instead of the
 // link so the fresh duplicate is distinguishable; cleared on Speichern.
 const justCreated = ref(false)
+
+// Final-Betrag confirmation (accounting): a finished booking's amount must be
+// explicitly confirmed; changing the amount later invalidates the confirmation.
+const amountConfirmed = ref(!!Number(props.order.amount_confirmed))
+const confirmedAmount = ref(Number(props.order.amount) || 0)
+const confirmOpen = ref(false)
+const confirmAmount = ref(0)
+const confirmInputRef = ref(null)
+let pendingAction = 'save'
 
 const customers = ref([])
 const availableServices = ref([])
@@ -202,6 +236,18 @@ function cycleStatus() {
   const val = next[form.value.status || 'auto']
   form.value.status = val === 'auto' ? null : val
 }
+
+// Mirrors the list view: manual status wins; otherwise date < today = done.
+const effectiveDone = computed(() => {
+  if (form.value.status) return form.value.status === 'done'
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  return String(form.value.order_date).slice(0, 10) < today
+})
+
+const isAmountConfirmed = computed(() =>
+  amountConfirmed.value && Number(form.value.amount) === Number(confirmedAmount.value)
+)
 
 // MySQL returns TIME as "HH:MM:SS"; <input type="time"> expects "HH:MM".
 function normalizeTime(t) {
@@ -260,8 +306,11 @@ const calculatedAmount = computed(() => {
   return total
 })
 
+// Sync the Betrag with the service total only on user changes — not while an
+// existing order's services load in, which would clobber the stored/confirmed Betrag.
+let initialized = false
 watch(calculatedAmount, (val) => {
-  form.value.amount = val
+  if (initialized) form.value.amount = val
 })
 
 function handleClickOutside(e) {
@@ -287,6 +336,9 @@ onMounted(async () => {
 
   if (props.order.id) {
     const full = await api.get(`orders.php?id=${props.order.id}`)
+    amountConfirmed.value = !!Number(full.amount_confirmed)
+    confirmedAmount.value = Number(full.amount) || 0
+    form.value.amount = Number(full.amount) || 0
     if (full.services) {
       for (const os of full.services) {
         if (os.service_id) {
@@ -299,6 +351,9 @@ onMounted(async () => {
       }
     }
   }
+
+  await nextTick()
+  initialized = true
 })
 
 onBeforeUnmount(() => {
@@ -319,16 +374,43 @@ function buildPayload() {
 
   const payload = { ...form.value, services }
   if (!payload.order_time) payload.order_time = null
+  // Confirmation only counts while the booking is finished and the Betrag
+  // still matches the confirmed value; anything else resets it.
+  payload.amount_confirmed = effectiveDone.value && isAmountConfirmed.value ? 1 : 0
   return payload
 }
 
-async function save() {
+// Gate before saving: a finished booking needs its final Betrag confirmed
+// (again, if the amount changed since the last confirmation).
+function requestSave(action) {
   if (!form.value.customer_id) {
     saveError.value = 'Bitte einen Kunden auswählen.'
     return
   }
   saveError.value = ''
 
+  // "New from Booking" always re-asks: the confirmation belongs to the
+  // booking it was given for, never to a duplicate.
+  if (effectiveDone.value && (!isAmountConfirmed.value || action === 'saveAsNew')) {
+    pendingAction = action
+    confirmAmount.value = Number(form.value.amount) || 0
+    confirmOpen.value = true
+    nextTick(() => confirmInputRef.value?.focus())
+    return
+  }
+
+  action === 'saveAsNew' ? saveAsNew() : save()
+}
+
+function confirmAmountAndSave() {
+  form.value.amount = Number(confirmAmount.value) || 0
+  amountConfirmed.value = true
+  confirmedAmount.value = form.value.amount
+  confirmOpen.value = false
+  pendingAction === 'saveAsNew' ? saveAsNew() : save()
+}
+
+async function save() {
   try {
     const payload = buildPayload()
     if (currentId.value) {
@@ -346,12 +428,6 @@ async function save() {
 // Creates a NEW booking from the current form data (the opened booking stays
 // untouched) and keeps the modal open, now editing the new record.
 async function saveAsNew() {
-  if (!form.value.customer_id) {
-    saveError.value = 'Bitte einen Kunden auswählen.'
-    return
-  }
-  saveError.value = ''
-
   try {
     const res = await api.post('orders.php', buildPayload())
     currentId.value = res.id
@@ -617,4 +693,63 @@ async function saveAsNew() {
 
 .custom-name { flex: 2; }
 .custom-price { flex: 1; }
+
+.amount-confirmed-hint {
+  color: #10b981;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 6px;
+}
+
+/* Final-Betrag confirmation dialog, layered above the booking modal */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 120;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.confirm-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 360px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.confirm-box h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.confirm-box p {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.confirm-amount {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.confirm-currency {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.confirm-amount input {
+  font-size: 18px;
+  font-weight: 600;
+}
 </style>

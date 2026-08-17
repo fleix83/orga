@@ -65,8 +65,8 @@ if ($method === 'POST') {
         }
 
         $stmt = $pdo->prepare('
-            INSERT INTO orders (order_number, order_date, order_time, customer_id, category_id, location_type, status, amount, duration_minutes, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO orders (order_number, order_date, order_time, customer_id, category_id, location_type, status, amount, amount_confirmed, duration_minutes, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
         $stmt->execute([
             $orderNumber,
@@ -77,6 +77,7 @@ if ($method === 'POST') {
             $data['location_type'] ?? 'vor_ort',
             !empty($data['status']) ? $data['status'] : null,
             $data['amount'] ?? 0,
+            !empty($data['amount_confirmed']) ? 1 : 0,
             $data['duration_minutes'] ?? null,
             $data['notes'] ?? null,
         ]);
@@ -109,7 +110,7 @@ if ($method === 'PUT' && $id) {
     try {
         $fields = [];
         $params = [];
-        $allowed = ['order_number', 'order_date', 'order_time', 'customer_id', 'category_id', 'location_type', 'status', 'amount', 'duration_minutes', 'notes'];
+        $allowed = ['order_number', 'order_date', 'order_time', 'customer_id', 'category_id', 'location_type', 'status', 'amount', 'amount_confirmed', 'duration_minutes', 'notes'];
 
         foreach ($allowed as $field) {
             if (array_key_exists($field, $data)) {

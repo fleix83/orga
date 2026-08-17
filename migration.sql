@@ -34,6 +34,7 @@ CREATE TABLE `orders` (
   `location_type` ENUM('vor_ort', 'remote') NOT NULL DEFAULT 'vor_ort',
   `status` ENUM('pending', 'done') DEFAULT NULL,
   `amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  `amount_confirmed` TINYINT(1) NOT NULL DEFAULT 0,
   `notes` TEXT DEFAULT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -51,6 +52,10 @@ CREATE TABLE `orders` (
 -- For existing installs (orders table already created without status):
 -- NULL = automatic (derived from order_date: future = pending, past = done), otherwise manually set.
 -- ALTER TABLE `orders` ADD COLUMN `status` ENUM('pending', 'done') DEFAULT NULL AFTER `location_type`;
+
+-- For existing installs (orders table already created without amount_confirmed):
+-- 1 = final Betrag was explicitly confirmed for accounting when the booking was finished.
+-- ALTER TABLE `orders` ADD COLUMN `amount_confirmed` TINYINT(1) NOT NULL DEFAULT 0 AFTER `amount`;
 
 -- 4. Order Services (Dienstleistungen pro Auftrag)
 CREATE TABLE `order_services` (
