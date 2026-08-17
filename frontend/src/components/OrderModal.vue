@@ -9,8 +9,13 @@
           :title="statusLabel"
           @click="cycleStatus"
         ></button>
+        <span
+          v-if="justCreated"
+          class="new-indicator"
+          title="Neu erstellte Buchung — noch nicht gespeichert"
+        >*</span>
         <button
-          v-if="currentId"
+          v-else-if="currentId"
           type="button"
           class="new-from-link"
           @click="saveAsNew"
@@ -151,6 +156,10 @@ const emit = defineEmits(['close', 'saved', 'created'])
 // Tracks which booking the modal is editing; changes when "New from Booking"
 // creates a fresh record that the modal then continues to edit.
 const currentId = ref(props.order.id || null)
+
+// True right after "New from Booking" — shows the asterisk instead of the
+// link so the fresh duplicate is distinguishable; cleared on Speichern.
+const justCreated = ref(false)
 
 const customers = ref([])
 const availableServices = ref([])
@@ -327,6 +336,7 @@ async function save() {
     } else {
       await api.post('orders.php', payload)
     }
+    justCreated.value = false
     emit('saved')
   } catch (e) {
     saveError.value = e.message || 'Speichern fehlgeschlagen.'
@@ -345,6 +355,7 @@ async function saveAsNew() {
   try {
     const res = await api.post('orders.php', buildPayload())
     currentId.value = res.id
+    justCreated.value = true
     emit('created')
   } catch (e) {
     saveError.value = e.message || 'Speichern fehlgeschlagen.'
@@ -397,6 +408,15 @@ async function saveAsNew() {
 }
 
 .new-from-link:hover { color: #4c6ce0; text-decoration: underline; }
+
+/* Marks a freshly duplicated booking; same spot as the link, title-sized */
+.new-indicator {
+  margin-left: auto;
+  color: #728fef;
+  font-size: inherit;
+  line-height: 1;
+  cursor: default;
+}
 
 .modal-grid {
   display: grid;
