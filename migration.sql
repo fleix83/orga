@@ -57,6 +57,10 @@ CREATE TABLE `orders` (
 -- 1 = final Betrag was explicitly confirmed for accounting when the booking was finished.
 -- ALTER TABLE `orders` ADD COLUMN `amount_confirmed` TINYINT(1) NOT NULL DEFAULT 0 AFTER `amount`;
 
+-- For existing installs: link to the Terminmanager event (bewerbungenundmehr.ch Slot Manager,
+-- same database) that blocks the booked slots. Managed automatically by api/orders.php.
+-- ALTER TABLE `orders` ADD COLUMN `tm_event_id` INT NULL DEFAULT NULL AFTER `amount_confirmed`;
+
 -- 4. Order Services (Dienstleistungen pro Auftrag)
 CREATE TABLE `order_services` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,

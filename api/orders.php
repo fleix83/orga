@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/terminmanager_sync.php';
 requireAuth();
 
 $method = getMethod();
@@ -96,6 +97,7 @@ if ($method === 'POST') {
         }
 
         $pdo->commit();
+        tmSafe(function () use ($pdo, $orderId) { tmSyncOrder($pdo, $orderId); });
         jsonResponse(['id' => $orderId], 201);
     } catch (Exception $e) {
         $pdo->rollBack();
@@ -141,6 +143,7 @@ if ($method === 'PUT' && $id) {
         }
 
         $pdo->commit();
+        tmSafe(function () use ($pdo, $id) { tmSyncOrder($pdo, $id); });
         jsonResponse(['success' => true]);
     } catch (Exception $e) {
         $pdo->rollBack();
@@ -149,8 +152,14 @@ if ($method === 'PUT' && $id) {
 }
 
 if ($method === 'DELETE' && $id) {
+    $tmEventId = tmSafe(function () use ($pdo, $id) {
+        $stmt = $pdo->prepare('SELECT tm_event_id FROM orders WHERE id = ?');
+        $stmt->execute([$id]);
+        return $stmt->fetchColumn();
+    });
     $stmt = $pdo->prepare('DELETE FROM orders WHERE id = ?');
     $stmt->execute([$id]);
+    tmSafe(function () use ($pdo, $tmEventId) { tmDeleteEvent($pdo, $tmEventId); });
     jsonResponse(['success' => true]);
 }
 
