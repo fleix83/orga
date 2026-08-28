@@ -38,11 +38,11 @@ function tmEventTypeId(PDO $pdo) {
 }
 
 // Hourly grid: block every slot the booking touches, minutes rounded outward.
-// No duration set -> assume one hour.
+// Every booking blocks at least two hours, regardless of its duration.
 function tmComputeSlots($orderTime, $durationMinutes) {
     [$h, $m] = array_map('intval', explode(':', $orderTime));
     $start = $h + $m / 60;
-    $end = $start + max((int)$durationMinutes, 60) / 60;
+    $end = $start + max((int)$durationMinutes, 120) / 60;
     return [(int)floor($start), (int)ceil($end)];
 }
 
