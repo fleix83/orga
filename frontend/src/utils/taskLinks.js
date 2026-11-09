@@ -15,10 +15,10 @@ export function customerName(first, last) {
   return `${first || ''} ${last || ''}`.replace(/\s+/g, ' ').trim()
 }
 
+/** "Buchung 73 Bauch": number (or date) plus the customer's last name. */
 export function orderLabel(order) {
-  return order.order_number
-    ? `Buchung ${order.order_number}`
-    : `Buchung ${shortDate(order.order_date)}`
+  const ref = order.order_number || shortDate(order.order_date)
+  return [`Buchung ${ref}`, customerName('', order.customer_last_name)].filter(Boolean).join(' ')
 }
 
 export function linkKey(link) {
@@ -27,7 +27,7 @@ export function linkKey(link) {
 
 export function linkLabel(link) {
   if (link.customer_id) return customerName(link.customer_first_name, link.customer_last_name)
-  return orderLabel(link)
+  return orderLabel({ ...link, customer_last_name: link.order_customer_last_name })
 }
 
 export function linkTitle(link) {

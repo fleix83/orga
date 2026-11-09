@@ -398,7 +398,8 @@ const serviceNames = computed(() => {
 const taskSummary = computed(() => {
   const customer = selectedCustomerLabel.value.replace(/\s+/g, ' ')
   const when = [shortDate(form.value.order_date), form.value.order_time].filter(Boolean).join(' ')
-  const lines = [`@${orderLabel({ order_number: currentOrderNumber.value, order_date: form.value.order_date })} · ${when}`]
+  const lastName = customers.value.find(c => Number(c.id) === Number(form.value.customer_id))?.last_name
+  const lines = [`@${orderLabel({ order_number: currentOrderNumber.value, order_date: form.value.order_date, customer_last_name: lastName })} · ${when}`]
   if (form.value.customer_id) lines.push(`Kunde: @${customer}`)
   if (serviceNames.value.length) lines.push(`Dienstleistungen: ${serviceNames.value.join(', ')}`)
   if (form.value.notes?.trim()) lines.push(`Anmerkungen: ${form.value.notes.trim()}`)
