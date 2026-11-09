@@ -117,3 +117,35 @@ CREATE TABLE `app_users` (
 -- Der Terminmanager filtert die oeffentliche Buchungsliste mit WHERE active = 1 AND is_public = 1.
 ALTER TABLE `services`
   ADD COLUMN IF NOT EXISTS `is_public` TINYINT(1) NOT NULL DEFAULT 1 AFTER `active`;
+
+-- 9. Tasks (Aufgaben-Board / Kanban)
+-- status = Spalte auf dem Board, position = Reihenfolge innerhalb der Spalte.
+CREATE TABLE IF NOT EXISTS `tasks` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `title` VARCHAR(255) NOT NULL,
+  `notes` TEXT DEFAULT NULL,
+  `status` ENUM('todo', 'doing', 'done') NOT NULL DEFAULT 'todo',
+  `position` INT(11) NOT NULL DEFAULT 0,
+  `due_date` DATE DEFAULT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_status_position` (`status`, `position`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 10. Task Links (@-Erwähnungen: Kunden und Buchungen an einer Aufgabe)
+-- Genau eine der beiden Spalten ist gesetzt; gelöschte Kunden/Buchungen
+-- verschwinden automatisch aus der Aufgabe.
+CREATE TABLE IF NOT EXISTS `task_links` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `task_id` INT(11) NOT NULL,
+  `customer_id` INT(11) DEFAULT NULL,
+  `order_id` INT(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `task_id` (`task_id`),
+  KEY `customer_id` (`customer_id`),
+  KEY `order_id` (`order_id`),
+  CONSTRAINT `task_links_ibfk_1` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `task_links_ibfk_2` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `task_links_ibfk_3` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

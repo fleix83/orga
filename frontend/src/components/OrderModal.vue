@@ -139,10 +139,26 @@
       <div v-if="saveError" class="save-error">{{ saveError }}</div>
 
       <div class="form-actions">
+        <button
+          v-if="currentId"
+          type="button"
+          class="btn add-task-btn"
+          title="Buchung mit Kunde, Dienstleistungen und Anmerkungen an eine Aufgabe hängen"
+          @click="addToTaskOpen = true"
+        >{{ addedToTask ? '✓ Aufgabe verknüpft' : '+ Zu Aufgabe' }}</button>
         <button class="btn" @click="$emit('close')">Abbrechen</button>
         <button class="btn btn-primary" @click="requestSave('save')">Speichern</button>
       </div>
     </div>
+
+    <AddToTaskDialog
+      v-if="addToTaskOpen"
+      :order-id="Number(currentId)"
+      :summary="taskSummary"
+      :default-title="taskDefaultTitle"
+      @close="addToTaskOpen = false"
+      @done="addToTaskOpen = false; addedToTask = true; emit('task-linked')"
+    />
 
     <!-- Final-Betrag confirmation for finished bookings (accounting) -->
     <div v-if="confirmOpen" class="confirm-overlay" @click.self="confirmOpen = false">
@@ -171,12 +187,14 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import { api } from '../api.js'
+import AddToTaskDialog from './AddToTaskDialog.vue'
+import { orderLabel, shortDate } from '../utils/taskLinks.js'
 
 const props = defineProps({
   order: { type: Object, default: () => ({}) },
 })
 
-const emit = defineEmits(['close', 'saved', 'created'])
+const emit = defineEmits(['close', 'saved', 'created', 'task-linked'])
 
 // Tracks which booking the modal is editing; changes when "New from Booking"
 // creates a fresh record that the modal then continues to edit.
@@ -362,6 +380,37 @@ onBeforeUnmount(() => {
 
 const saveError = ref('')
 
+// Booking → task: the summary is built from the current form, so unsaved
+// edits to notes or services are carried over as well.
+const addToTaskOpen = ref(false)
+const addedToTask = ref(false)
+// Unknown right after "New from Booking" (assigned by the server); the label falls back to the date.
+const currentOrderNumber = ref(props.order.order_number || null)
+
+const serviceNames = computed(() => {
+  const names = selectedServiceIds.value
+    .map(id => selectableServices.value.find(s => s.id === id)?.name)
+    .filter(Boolean)
+  if (hasCustomService.value && customServiceName.value) names.push(customServiceName.value)
+  return names
+})
+
+const taskSummary = computed(() => {
+  const customer = selectedCustomerLabel.value.replace(/\s+/g, ' ')
+  const when = [shortDate(form.value.order_date), form.value.order_time].filter(Boolean).join(' ')
+  const lines = [`@${orderLabel({ order_number: currentOrderNumber.value, order_date: form.value.order_date })} · ${when}`]
+  if (form.value.customer_id) lines.push(`Kunde: @${customer}`)
+  if (serviceNames.value.length) lines.push(`Dienstleistungen: ${serviceNames.value.join(', ')}`)
+  if (form.value.notes?.trim()) lines.push(`Anmerkungen: ${form.value.notes.trim()}`)
+  return lines.join('\n')
+})
+
+const taskDefaultTitle = computed(() =>
+  [form.value.customer_id ? selectedCustomerLabel.value.replace(/\s+/g, ' ') : '', serviceNames.value.join(', ') || 'Buchung']
+    .filter(Boolean)
+    .join(' – ')
+)
+
 function buildPayload() {
   const services = []
   for (const id of selectedServiceIds.value) {
@@ -431,6 +480,8 @@ async function saveAsNew() {
   try {
     const res = await api.post('orders.php', buildPayload())
     currentId.value = res.id
+    currentOrderNumber.value = null
+    addedToTask.value = false
     justCreated.value = true
     emit('created')
   } catch (e) {
@@ -693,6 +744,9 @@ async function saveAsNew() {
 
 .custom-name { flex: 2; }
 .custom-price { flex: 1; }
+
+/* Booking → task, pushed to the left edge of the action row */
+.add-task-btn { margin-right: auto; }
 
 .amount-confirmed-hint {
   color: #10b981;

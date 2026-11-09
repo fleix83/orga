@@ -35,6 +35,7 @@ const { setAuthenticated } = useAuth()
 
 const items = [
   { path: '/auftraege', label: 'Buchung' },
+  { path: '/aufgaben', label: 'Aufgaben' },
   { path: '/kunden', label: 'Kunden' },
   { path: '/dienstleistungen', label: 'Dienstleistungen' },
   { path: '/inventar', label: 'Inventar' },

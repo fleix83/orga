@@ -7,12 +7,14 @@ import Inventar from './views/Inventar.vue'
 import Aufwand from './views/Aufwand.vue'
 import Geschaeftszahlen from './views/Geschaeftszahlen.vue'
 import Termine from './views/Termine.vue'
+import Aufgaben from './views/Aufgaben.vue'
 
 const routes = [
   { path: '/login', component: Login, meta: { noAuth: true } },
   { path: '/', redirect: '/auftraege' },
   { path: '/kunden', component: Kunden },
   { path: '/auftraege', component: Auftraege },
+  { path: '/aufgaben', component: Aufgaben },
   { path: '/dienstleistungen', component: Dienstleistungen },
   { path: '/inventar', component: Inventar },
   { path: '/aufwand', component: Aufwand },
