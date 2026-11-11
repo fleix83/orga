@@ -2,7 +2,10 @@
   <div>
     <div class="page-header">
       <h1>Buchung</h1>
-      <button class="btn btn-primary" @click="showModal = true; editOrder = {}">+ Neue Buchung</button>
+      <div style="display:flex;gap:8px">
+        <input v-model="search" type="search" class="search-input" placeholder="Suchen...">
+        <button class="btn btn-primary" @click="showModal = true; editOrder = {}">+ Neue Buchung</button>
+      </div>
     </div>
 
     <div class="table-wrap">
@@ -46,6 +49,9 @@
             <button class="btn btn-sm btn-danger" @click.stop="confirmDelete(o)">✕</button>
           </td>
         </tr>
+        <tr v-if="search && !sorted.length">
+          <td colspan="7" class="empty-row">Keine Treffer</td>
+        </tr>
       </tbody>
     </table>
     </div>
@@ -75,7 +81,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { api } from '../api.js'
 import OrderModal from '../components/OrderModal.vue'
 import CustomerModal from '../components/CustomerModal.vue'
@@ -88,8 +94,37 @@ const showModal = ref(false)
 const editOrder = ref({})
 const deleteTarget = ref(null)
 const customerModalId = ref(null)
+const search = ref('')
 
-const { sorted, toggleSort, sortClass } = useSort(orders, 'order_date', 'desc')
+const LOCATION_LABELS = { vor_ort: 'Vor Ort', remote: 'Remote' }
+const STATUS_LABELS = { pending: 'Pendent', done: 'Erledigt' }
+
+// Every booking field as searchable text, dates both as shown ("12. März 2026") and numeric.
+function searchText(o) {
+  const date = String(o.order_date || '').slice(0, 10)
+  const [y, m, d] = date.split('-')
+  return [
+    o.order_number, formatDate(o.order_date), date, d && `${d}.${m}.${y}`,
+    o.order_time && String(o.order_time).slice(0, 5),
+    o.customer_first_name, o.customer_last_name, o.category_name,
+    LOCATION_LABELS[o.location_type], STATUS_LABELS[effectiveStatus(o)],
+    o.amount != null && Number(o.amount).toFixed(2),
+    o.duration_minutes && `${o.duration_minutes} min`,
+    o.service_names, o.notes,
+  ].filter(Boolean).join(' ').toLowerCase()
+}
+
+// All terms must match (in any field), like the Aufgaben search.
+const filteredOrders = computed(() => {
+  const tokens = search.value.toLowerCase().split(/\s+/).filter(Boolean)
+  if (!tokens.length) return orders.value
+  return orders.value.filter(o => {
+    const haystack = searchText(o)
+    return tokens.every(tok => haystack.includes(tok))
+  })
+})
+
+const { sorted, toggleSort, sortClass } = useSort(filteredOrders, 'order_date', 'desc')
 
 onMounted(load)
 
@@ -125,6 +160,11 @@ async function doDelete() {
 
 <style scoped>
 .clickable-row { cursor: pointer; }
+
+.empty-row {
+  text-align: center;
+  color: #9ca3af;
+}
 
 .date-cell {
   display: inline-flex;
